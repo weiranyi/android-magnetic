@@ -1,0 +1,23 @@
+<resources>
+    <color name="bg">#F3F1F2</color>
+    <color name="card">#FAFAFA</color>
+    <color name="card_border">#FAFAFA</color>
+    <color name="text_primary">#707176</color>
+    <color name="text_secondary">#707176</color>
+    <color name="divider">#DDDDE0</color>
+    <color name="stable">#3AB883</color>
+    <color name="warning">#F2A93B</color>
+    <color name="danger">#D94A4A</color>
+    <color name="sample_rate_bg">#EAF8EF</color>
+    <color name="sample_rate_border">#B7E4C2</color>
+    <color name="sample_rate_text">#2AA45C</color>
+    <color name="segment_bg">#FAFAFA</color>
+    <color name="segment_active">#1E1E20</color>
+    <color name="segment_active_text">#FFFFFF</color>
+    <color name="axis_x">#EF3333</color>
+    <color name="axis_y">#2DAA3E</color>
+    <color name="axis_z">#2287F2</color>
+    <color name="chart_grid">#E7E7EC</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="primary">#2287F2</color>
+</resources>
