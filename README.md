@@ -16,6 +16,7 @@
 
 ## 运行截图
 ![运行截图](运行截图.jpg)
+![磁场录制](磁场录制.png)
 
 ## 参考
 [1] 美国国家海洋和大气管理局：https://www.ncei.noaa.gov/products/geomagnetism-frequently-asked-questions?f_link_type=f_linkinlinenote&flow_extra=eyJpbmxpbmVfZGlzcGxheV9wb3NpdGlvbiI6MCwiZG9jX3Bvc2l0aW9uIjowLCJkb2NfaWQiOiJiMTg5ZDI5MmJiNzVmNDRhLTM1OTc0NGY0MzNiNDMxNDgifQ%3D%3D&enable_bottom_share_style=1&hybrid_event_param=HybridEventParams(enterMethod%3Dmessage_markdown_url%2C%20localPage%3Dchat%2C%20chatType%3Ddefault%2C%20duration%3D0%2C%20isRichMediaPictureLink%3Dfalse%2C%20mobMap%3D%7Bmessage_id%3D44583879408483330%2C%20previous_page%3Dlanding%2C%20is_immersive_background%3D0%2C%20chat_type%3Ddefault%2C%20reply_id%3D44583879408479746%2C%20enter_method%3Dlanding%2C%20conversation_id%3D14125227250447%2C%20enter_chat_method%3Dlanding%2C%20bot_id%3D7234781073513644036%2C%20current_page%3Dchat%7D%2C%20extra%3Dnull)&use_xbridge3=true&loader_name=forest&need_sec_link=1&sec_link_scene=im&theme=light

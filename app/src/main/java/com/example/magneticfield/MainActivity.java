@@ -1067,8 +1067,14 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         refreshFileList();
     }
 
+    // B-23 fix: removed the !sensorReliable guard. Many Android sensors briefly
+    // report SENSOR_STATUS_UNRELIABLE after the app returns from background or
+    // after sensor re-registration, even though they continue to produce valid
+    // data. The magnitude being inside the 25-65 uT window is itself proof that
+    // the sensor is working — showing "unstable" for a perfectly normal 43 uT
+    // reading is misleading.
     private void updateStatus(float magnitude) {
-        if (!sensorReliable || magnitude < 25f || magnitude > 65f) {
+        if (magnitude < 25f || magnitude > 65f) {
             statusText.setText(R.string.unstable);
             setDotColor(getColorCompat(R.color.warning));
         } else {
