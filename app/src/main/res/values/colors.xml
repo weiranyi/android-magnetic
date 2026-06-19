@@ -2,8 +2,18 @@
     <!-- 背景色 -->
     <color name="bg">#F7F8FA</color>
     <color name="card">#FFFFFF</color>
-    <color name="card_border">#E5E7EB</color>
-    
+    <color name="card_border">#BFFFFFFF</color>
+
+    <!-- 毛玻璃色 -->
+    <color name="glass_bg">#CCFFFFFF</color>
+    <color name="glass_border">#BFFFFFFF</color>
+    <color name="glass_primary">#D93B82F6</color>
+    <color name="glass_primary_border">#E6BFDBFE</color>
+    <color name="glass_danger">#D9EF4444</color>
+    <color name="glass_success">#D910B981</color>
+    <color name="glass_gray">#D98E8E93</color>
+    <color name="glass_overlay">#B3000000</color>
+
     <!-- 文本颜色 -->
     <color name="text_primary">#1E1E2E</color>
     <color name="text_secondary">#6B7280</color>
@@ -34,14 +44,14 @@
     
     <!-- 图表 -->
     <color name="chart_grid">#F3F4F6</color>
-    <color name="card_bg">#F9FAFB</color>
+    <color name="card_bg">#CCFFFFFF</color>
     
     <!-- 主色调 -->
     <color name="primary">#3B82F6</color>
     
     <!-- 卡片背景 -->
-    <color name="stat_card_bg">#FFFFFF</color>
+    <color name="stat_card_bg">#CCFFFFFF</color>
     <color name="stat_card_text">#1E1E2E</color>
-    <color name="dialog_bg">#FFFFFF</color>
-    <color name="chart_card_bg">#FFFFFF</color>
+    <color name="dialog_bg">#E6FFFFFF</color>
+    <color name="chart_card_bg">#CCFFFFFF</color>
 </resources>

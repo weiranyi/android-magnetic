@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magnetic · 当前 UI 毛玻璃化原型</title>
+  <style>
+    :root {
+      --bg: #F7F8FA;
+      --text-primary: #1E1E2E;
+      --text-secondary: #6B7280;
+      --text-tertiary: #9CA3AF;
+      --primary: #3B82F6;
+      --stable: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --axis-x: #EF4444;
+      --axis-y: #10B981;
+      --axis-z: #3B82F6;
+      --glass-bg: rgba(255, 255, 255, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.72);
+      --glass-shadow: 0 8px 24px rgba(31, 38, 135, 0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 10% 10%, rgba(59,130,246,0.12) 0%, transparent 30%),
+        radial-gradient(circle at 90% 20%, rgba(16,185,129,0.1) 0%, transparent 30%),
+        radial-gradient(circle at 50% 90%, rgba(139,92,246,0.08) 0%, transparent 30%);
+      min-height: 100vh;
+      color: var(--text-primary);
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+    h1 { text-align: center; font-size: 20px; margin-bottom: 4px; }
+    .subtitle { text-align: center; font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .nav button {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 12px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nav button:hover, .nav button.active {
+      background: rgba(59, 130, 246, 0.85);
+      color: #fff;
+    }
+    .screen { display: none; max-width: 380px; margin: 0 auto 40px; }
+    .screen.active { display: block; }
+    .phone {
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 36px;
+      padding: 14px;
+      box-shadow: 0 20px 60px rgba(31, 38, 135, 0.12), inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .phone-screen {
+      background: rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 28px;
+      overflow: hidden;
+      min-height: 720px;
+      position: relative;
+    }
+    .page-title {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 22px 0 14px;
+    }
+    .scroll-content {
+      padding: 52px 28px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Glass card base */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      box-shadow: var(--glass-shadow);
+    }
+
+    /* Header */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-title { font-size: 28px; font-weight: bold; letter-spacing: 0.02em; }
+    .btn-glass {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(59, 130, 246, 0.82);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 12px;
+      padding: 0 16px;
+      height: 40px;
+      font-size: 14px;
+      font-weight: bold;
+      box-shadow: 0 6px 18px rgba(59,130,246,0.2);
+    }
+    .btn-glass svg { width: 18px; height: 18px; }
+
+    /* Segment */
+    .segment {
+      display: flex;
+      margin-top: 16px;
+      padding: 4px;
+      background: rgba(243, 244, 246, 0.55);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.65);
+      border-radius: 14px;
+      height: 52px;
+    }
+    .segment-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-secondary);
+    }
+    .segment-item.active {
+      background: rgba(59, 130, 246, 0.85);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.2);
+    }
+
+    /* Sample rate row */
+    .sample-rate-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding: 14px 20px;
+    }
+    .sample-rate-row .label { font-size: 14px; color: var(--text-secondary); }
+    .sample-rate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(239, 246, 255, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(191, 219, 254, 0.7);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    /* Field strength card */
+    .field-card {
+      margin-top: 12px;
+      padding: 18px 20px;
+    }
+    .field-card .label { font-size: 13px; color: var(--text-secondary); letter-spacing: 0.05em; }
+    .field-row {
+      display: flex;
+      align-items: center;
+      margin-top: 12px;
+    }
+    .field-value { font-size: 34px; font-weight: bold; }
+    .field-unit { font-size: 18px; margin-left: 6px; }
+    .field-spacer { flex: 1; }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 6px var(--danger);
+    }
+    .status-dot.stable { background: var(--stable); box-shadow: 0 0 6px var(--stable); }
+    .status-text { margin-left: 6px; font-size: 14px; }
+    .field-hint { margin-top: 8px; font-size: 11px; color: var(--text-tertiary); }
+
+    /* History table */
+    .history-card {
+      margin-top: 10px;
+      padding: 14px 24px 10px;
+    }
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 11px 0;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-header {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Axis cards */
+    .axis-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .axis-card {
+      flex: 1;
+      height: 78px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+    }
+    .axis-card .axis-title { font-size: 16px; font-weight: bold; }
+    .axis-card .axis-value { margin-top: 6px; font-size: 18px; font-weight: bold; }
+
+    /* Total card */
+    .total-card {
+      margin-top: 12px;
+      padding: 18px 20px;
+      text-align: center;
+    }
+    .total-card .label { font-size: 14px; color: var(--text-secondary); letter-spacing: 0.05em; }
+    .total-card .value { margin-top: 8px; font-size: 30px; font-weight: bold; }
+    .stat-row {
+      display: flex;
+      margin-top: 18px;
+    }
+    .stat-item { flex: 1; text-align: center; font-size: 13px; color: var(--text-primary); }
+
+    /* Chart area */
+    .chart-card {
+      margin-top: 12px;
+      padding: 12px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .chart-placeholder {
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.35);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-line {
+      position: absolute;
+      bottom: 50%;
+      left: 10px;
+      right: 10px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    }
+
+    /* Bottom buttons */
+    .bottom-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      height: 52px;
+    }
+    .bottom-actions .btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      border: 1px solid rgba(255,255,255,0.4);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+    .btn-reset { background: rgba(107, 114, 128, 0.82); }
+    .btn-record { background: rgba(59, 130, 246, 0.85); }
+    .btn-record.recording { background: rgba(239, 68, 68, 0.85); }
+
+    /* Records section */
+    .records-title {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+    .file-item {
+      margin-top: 10px;
+      padding: 14px;
+    }
+    .file-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
+    .file-meta { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; }
+    .file-actions { display: flex; gap: 8px; }
+    .file-actions button {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.5);
+      font-size: 12px;
+      color: #fff;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+    }
+    .btn-open { background: rgba(59, 130, 246, 0.82); }
+    .btn-share { background: rgba(16, 185, 129, 0.82); }
+    .btn-analyze { background: rgba(245, 158, 11, 0.82); }
+    .btn-delete { background: rgba(239, 68, 68, 0.82); }
+
+    /* Footer text */
+    .footer-text {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .author-text {
+      text-align: center;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* Dialogs */
+    .dialog-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 10;
+    }
+    .dialog-glass {
+      width: 100%;
+      max-height: 88%;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 28px 28px 0 0;
+      border: 1px solid rgba(255,255,255,0.8);
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .dialog-title { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 16px; }
+    .rate-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 14px;
+    }
+    .rate-option input { accent-color: var(--primary); }
+    .rate-option label { flex: 1; font-size: 14px; }
+    .rate-option .desc { font-size: 11px; color: var(--text-secondary); }
+    .dialog-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .dialog-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.6);
+      font-weight: bold;
+    }
+    .dialog-actions .cancel { background: rgba(0,0,0,0.06); color: var(--text-primary); }
+    .dialog-actions .primary { background: rgba(59, 130, 246, 0.85); color: #fff; }
+
+    .calibration-video {
+      width: 100%;
+      height: 220px;
+      background: #000;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .play-overlay {
+      width: 56px;
+      height: 56px;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(4px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Magnetic · 当前 UI 毛玻璃化</h1>
+    <p class="subtitle">保留现有布局与组件，仅将背景、卡片、按钮替换为毛玻璃效果</p>
+
+    <div class="nav">
+      <button class="active" onclick="showScreen(0)">频率谱</button>
+      <button onclick="showScreen(1)">三轴/文件</button>
+      <button onclick="showScreen(2)">采样率</button>
+      <button onclick="showScreen(3)">校准</button>
+    </div>
+
+    <!-- 1. 频率谱 -->
+    <div class="screen active">
+      <div class="page-title">频率谱 · Spectrum</div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="scroll-content">
+            <div class="app-header">
+              <div class="app-title">Magnetic</div>
+              <div class="btn-glass">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+                Calibrate
+              </div>
+            </div>
+
+            <div class="segment glass-card">
+              <div class="segment-item active">Spectrum</div>
+              <div class="segment-item">Axes</div>
+            </div>
+
+            <div class="sample-rate-row glass-card">
+              <span class="label">Sample rate</span>
+              <span class="sample-rate-badge">⚙ -- Hz</span>
+            </div>
+
+            <div class="field-card glass-card">
+              <div class="label">FIELD STRENGTH</div>
+              <div class="field-row">
+                <span class="field-value">38.21</span>
+                <span class="field-unit">µT</span>
+                <span class="field-spacer"></span>
+                <div class="status-dot stable"></div>
+                <span class="status-text">Stable</span>
+              </div>
+              <div class="field-hint">ⓘ Earth's field 25~65 µT, calibrate if out of range</div>
+            </div>
+
+            <div class="history-card glass-card">
+              <div class="history-row">
+                <span class="history-header">Frequency</span>
+                <span class="history-header">Energy</span>
+              </div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+              <div class="history-row"><span>0.00 Hz</span><span>-</span></div>
+            </div>
+
+            <div class="footer-text">Last update: 14:32</div>
+            <div class="author-text">Author repo: https://github.com/weiranyi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 三轴 + 文件 -->
+    <div class="screen">
+      <div class="page-title">三轴 / 文件 · Axes & Records</div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="scroll-content">
+            <div class="app-header">
+              <div class="app-title">Magnetic</div>
+              <div class="btn-glass">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+                Calibrate
+              </div>
+            </div>
+
+            <div class="segment glass-card">
+              <div class="segment-item">Spectrum</div>
+              <div class="segment-item active">Axes</div>
+            </div>
+
+            <div class="sample-rate-row glass-card">
+              <span class="label">Sample rate</span>
+              <span class="sample-rate-badge">⚙ 5 Hz</span>
+            </div>
+
+            <div class="axis-row">
+              <div class="axis-card glass-card" style="color:var(--axis-x)">
+                <div class="axis-title">X</div>
+                <div class="axis-value">12.4</div>
+              </div>
+              <div class="axis-card glass-card" style="color:var(--axis-y)">
+                <div class="axis-title">Y</div>
+                <div class="axis-value">-8.7</div>
+              </div>
+              <div class="axis-card glass-card" style="color:var(--axis-z)">
+                <div class="axis-title">Z</div>
+                <div class="axis-value">34.5</div>
+              </div>
+            </div>
+
+            <div class="total-card glass-card">
+              <div class="label">TOTAL</div>
+              <div class="value">38.21 µT</div>
+              <div class="stat-row">
+                <div class="stat-item">MAX<br>45.2 µT</div>
+                <div class="stat-item">MIN<br>31.1 µT</div>
+                <div class="stat-item">AVG<br>38.4 µT</div>
+              </div>
+            </div>
+
+            <div class="chart-card glass-card">
+              <div class="chart-placeholder"><div class="chart-line"></div></div>
+            </div>
+
+            <div class="bottom-actions">
+              <div class="btn btn-reset">↺ Reset</div>
+              <div class="btn btn-record">● Record</div>
+            </div>
+
+            <div class="records-title">Records</div>
+            <div class="file-item glass-card">
+              <div class="file-name">Magnetic_20260619_212045.csv</div>
+              <div class="file-meta">2026-06-19 21:20:45 · 24 pts · 4.6s</div>
+              <div class="file-actions">
+                <button class="btn-open">Open</button>
+                <button class="btn-share">Share</button>
+                <button class="btn-analyze">Analyze</button>
+                <button class="btn-delete">Del</button>
+              </div>
+            </div>
+            <div class="file-item glass-card">
+              <div class="file-name">Magnetic_20260619_213147.csv</div>
+              <div class="file-meta">2026-06-19 21:31:47 · 48 pts · 9.2s</div>
+              <div class="file-actions">
+                <button class="btn-open">Open</button>
+                <button class="btn-share">Share</button>
+                <button class="btn-analyze">Analyze</button>
+                <button class="btn-delete">Del</button>
+              </div>
+            </div>
+
+            <div class="footer-text">Last update: 14:33</div>
+            <div class="author-text">Author repo: https://github.com/weiranyi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 采样率选择 -->
+    <div class="screen">
+      <div class="page-title">采样率弹窗 · Sample Rate</div>
+      <div class="phone">
+        <div class="phone-screen" style="position:relative;">
+          <div class="scroll-content" style="opacity:0.35;">
+            <div class="app-header">
+              <div class="app-title">Magnetic</div>
+              <div class="btn-glass">Calibrate</div>
+            </div>
+            <div class="segment glass-card">
+              <div class="segment-item active">Spectrum</div>
+              <div class="segment-item">Axes</div>
+            </div>
+          </div>
+          <div class="dialog-overlay">
+            <div class="dialog-glass">
+              <div class="dialog-title">Set sample rate</div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r1" checked>
+                <label for="r1">Slowest, about 5 Hz</label>
+              </div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r2">
+                <label for="r2">Medium, about 15 Hz</label>
+              </div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r3">
+                <label for="r3">Fast, about 50 Hz</label>
+              </div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r4">
+                <label for="r4">Fastest, depends on hardware</label>
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel">Cancel</button>
+                <button class="primary">OK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 校准 -->
+    <div class="screen">
+      <div class="page-title">校准弹窗 · Calibration</div>
+      <div class="phone">
+        <div class="phone-screen" style="position:relative; background:rgba(0,0,0,0.3);">
+          <div class="dialog-overlay" style="background:rgba(0,0,0,0.45); align-items:center;">
+            <div class="dialog-glass" style="border-radius:24px; max-height:none;">
+              <div class="dialog-title">Calibration Guide</div>
+              <div class="calibration-video">
+                <div class="play-overlay">▶</div>
+              </div>
+              <div style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:16px;">
+                请按视频示意，将设备在空中做“8”字运动，以校准磁场传感器。<br>
+                Close the window after finishing drawing 8.
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel" style="flex:1;">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(idx) {
+      document.querySelectorAll('.screen').forEach((s, i) => s.classList.toggle('active', i === idx));
+      document.querySelectorAll('.nav button').forEach((b, i) => b.classList.toggle('active', i === idx));
+    }
+  </script>
+</body>
+</html>

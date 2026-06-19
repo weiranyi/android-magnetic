@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:background="#FFFFFF"
+    android:background="@drawable/bg_glass_gradient"
     android:padding="32dp">
 
     <!-- 应用图标：保留原 NS logo，背景已抠透明，无方形阴影 -->

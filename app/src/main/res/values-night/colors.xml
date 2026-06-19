@@ -1,7 +1,18 @@
 <resources>
     <color name="bg">#000000</color>
     <color name="card">#1F1F22</color>
-    <color name="card_border">#1F1F22</color>
+    <color name="card_border">#4DFFFFFF</color>
+
+    <!-- 毛玻璃色（夜间） -->
+    <color name="glass_bg">#CC1F1F22</color>
+    <color name="glass_border">#4DFFFFFF</color>
+    <color name="glass_primary">#D955A7FF</color>
+    <color name="glass_primary_border">#6655A7FF</color>
+    <color name="glass_danger">#D9FF6767</color>
+    <color name="glass_success">#D94CEB8C</color>
+    <color name="glass_gray">#D9808080</color>
+    <color name="glass_overlay">#B3000000</color>
+
     <color name="text_primary">#F4F5FF</color>
     <color name="text_secondary">#9B9BA5</color>
     <color name="divider">#3A3A3D</color>
@@ -18,10 +29,10 @@
     <color name="axis_y">#62E77A</color>
     <color name="axis_z">#55A7FF</color>
     <color name="chart_grid">#343438</color>
-    <color name="card_bg">#2A2A2E</color>
+    <color name="card_bg">#CC2A2A2E</color>
     <color name="primary">#55A7FF</color>
-    <color name="stat_card_bg">#2A2A2E</color>
+    <color name="stat_card_bg">#CC2A2A2E</color>
     <color name="stat_card_text">#F4F5FF</color>
-    <color name="dialog_bg">#1F1F22</color>
-    <color name="chart_card_bg">#1F1F22</color>
+    <color name="dialog_bg">#E61F1F22</color>
+    <color name="chart_card_bg">#CC1F1F22</color>
 </resources>

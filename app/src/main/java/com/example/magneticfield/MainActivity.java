@@ -649,6 +649,26 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
                 .create();
         confirmDialog.setOnDismissListener(dialog -> confirmDialog = null);
         confirmDialog.show();
+        applyGlassDialogBackground(confirmDialog);
+    }
+
+    private void applyGlassDialogBackground(android.app.Dialog dialog) {
+        if (dialog == null) {
+            return;
+        }
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(R.drawable.dialog_background);
+        }
+        if (dialog instanceof android.app.AlertDialog) {
+            android.widget.ListView listView = ((android.app.AlertDialog) dialog).getListView();
+            if (listView != null) {
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                listView.setDivider(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+                listView.setDividerHeight(0);
+                listView.setSelector(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            }
+        }
     }
 
     
@@ -1255,6 +1275,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
                 .setCancelable(false)
                 .create();
         progressDialog.show();
+        applyGlassDialogBackground(progressDialog);
 
         Runnable analyzeTask = () -> {
             try {
@@ -1858,7 +1879,9 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
-                .show();
+                .create();
+        confirmDialog.show();
+        applyGlassDialogBackground(confirmDialog);
         confirmDialog.setOnDismissListener(dialog -> confirmDialog = null);
     }
 

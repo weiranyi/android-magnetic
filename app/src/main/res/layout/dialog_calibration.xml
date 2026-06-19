@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#CC000000">
+    android:background="@color/glass_overlay">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -37,69 +38,71 @@
                 android:layout_height="36dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/circle_glass_bg"
                 android:contentDescription="@string/close"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
                 android:tint="@color/text_secondary" />
         </RelativeLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="12dp"
-            android:background="@color/divider" />
-
-        <FrameLayout
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="280dp"
-            android:background="@drawable/card_background">
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/glass_bg"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp">
 
-            <VideoView
-                android:id="@+id/calibrationVideoView"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center" />
+                android:layout_margin="1dp"
+                android:background="@drawable/card_background">
 
-            <ImageView
-                android:id="@+id/playPauseOverlay"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:layout_gravity="center"
-                android:alpha="0.8"
-                android:background="@drawable/play_pause_bg"
-                android:contentDescription="@string/play_pause"
-                android:padding="12dp"
-                android:src="@android:drawable/ic_media_pause"
-                android:tint="#FFFFFF"
-                android:visibility="gone" />
+                <VideoView
+                    android:id="@+id/calibrationVideoView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
 
-            
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:background="#80000000"
-                android:gravity="center"
-                android:padding="8dp"
-                android:text="@string/close_after_drawing"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp" />
+                <ImageView
+                    android:id="@+id/playPauseOverlay"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_gravity="center"
+                    android:alpha="0.8"
+                    android:background="@drawable/play_pause_bg"
+                    android:contentDescription="@string/play_pause"
+                    android:padding="12dp"
+                    android:src="@android:drawable/ic_media_pause"
+                    android:tint="#FFFFFF"
+                    android:visibility="gone" />
 
-            <View
-                android:id="@+id/clickOverlay"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:clickable="true"
-                android:focusable="true" />
-        </FrameLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top"
+                    android:background="@drawable/calibration_hint_bg"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:text="@string/close_after_drawing"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp" />
+
+                <View
+                    android:id="@+id/clickOverlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </FrameLayout>
+        </androidx.cardview.widget.CardView>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="-2dp"
+            android:layout_marginTop="10dp"
             android:text="@string/tap_to_play_pause"
             android:textColor="@color/text_secondary"
             android:textSize="12sp" />

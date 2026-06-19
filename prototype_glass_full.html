@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>磁场分析仪 · 毛玻璃完整原型</title>
+  <style>
+    :root {
+      --bg-color: #eef2f7;
+      --glass-bg: rgba(255, 255, 255, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.72);
+      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+      --text-main: #1a1a2e;
+      --text-sub: #6b7280;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      background: var(--bg-color);
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(59,130,246,0.18) 0%, transparent 35%),
+        radial-gradient(circle at 85% 30%, rgba(16,185,129,0.14) 0%, transparent 35%),
+        radial-gradient(circle at 50% 80%, rgba(139,92,246,0.12) 0%, transparent 35%);
+      min-height: 100vh;
+      color: var(--text-main);
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .nav button {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nav button:hover, .nav button.active {
+      background: rgba(59, 130, 246, 0.85);
+      color: #fff;
+      border-color: rgba(255,255,255,0.4);
+    }
+    .screen {
+      display: none;
+      max-width: 360px;
+      margin: 0 auto 40px;
+    }
+    .screen.active { display: block; }
+    .phone {
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 36px;
+      padding: 14px;
+      box-shadow: 0 20px 60px rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .phone-screen {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 28px;
+      overflow: hidden;
+      min-height: 680px;
+      position: relative;
+    }
+    .page-title {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-sub);
+      margin: 28px 0 18px;
+    }
+
+    /* 启动页 */
+    .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 680px;
+      padding: 40px 30px;
+    }
+    .logo-glass {
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 32px;
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .app-title { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+    .app-subtitle { font-size: 15px; color: var(--text-sub); margin-bottom: 40px; }
+    .progress-glass {
+      width: 100%;
+      height: 6px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-bar { width: 66%; height: 100%; background: var(--primary); border-radius: 3px; }
+    .progress-text { font-size: 13px; color: var(--text-sub); text-align: center; }
+
+    /* 主页面 */
+    .main-header {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+      padding: 50px 20px 16px;
+      text-align: center;
+    }
+    .main-header h2 { font-size: 17px; font-weight: 600; }
+    .sample-rate-hint {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 6px;
+    }
+    .tabs {
+      display: flex;
+      margin: 16px 20px;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 13px;
+      border-radius: 10px;
+      color: var(--text-sub);
+    }
+    .tab.active { background: rgba(59, 130, 246, 0.85); color: #fff; }
+    .card {
+      background: rgba(255, 255, 255, 0.58);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 20px;
+      margin: 12px 20px;
+      padding: 18px;
+      box-shadow: var(--glass-shadow);
+    }
+    .card-label { font-size: 12px; color: var(--text-sub); margin-bottom: 6px; }
+    .card-value { font-size: 34px; font-weight: 700; color: var(--text-main); }
+    .card-unit { font-size: 15px; color: var(--text-sub); margin-left: 4px; }
+    .card-hint { font-size: 12px; color: var(--text-sub); margin-top: 8px; }
+    .chart-area {
+      height: 160px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 14px;
+      margin-top: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-line {
+      position: absolute;
+      bottom: 30px;
+      left: 10px;
+      right: 10px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      border-radius: 2px;
+    }
+    .chart-line::before {
+      content: "";
+      position: absolute;
+      top: -40px;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.15) 50%, transparent 100%);
+    }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--danger);
+    }
+    .status-dot.stable { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .status-dot.warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+    .record-btn {
+      margin: 16px 20px 30px;
+      padding: 14px;
+      text-align: center;
+      background: rgba(59, 130, 246, 0.85);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border-radius: 16px;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.4);
+      box-shadow: 0 8px 24px rgba(59,130,246,0.25);
+    }
+    .record-btn.recording {
+      background: rgba(239, 68, 68, 0.85);
+      box-shadow: 0 8px 24px rgba(239,68,68,0.25);
+    }
+    .record-btn.saving {
+      background: rgba(245, 158, 11, 0.85);
+      box-shadow: 0 8px 24px rgba(245,158,11,0.25);
+    }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      margin: 0 20px 12px;
+    }
+    .top-actions .btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--text-main);
+    }
+
+    /* 文件列表 */
+    .list-header {
+      padding: 50px 20px 12px;
+      font-size: 17px;
+      font-weight: 600;
+      text-align: center;
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+    }
+    .file-item {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 18px;
+      margin: 12px 16px;
+      padding: 14px;
+      box-shadow: var(--glass-shadow);
+    }
+    .file-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
+    .file-meta { font-size: 11px; color: var(--text-sub); margin-bottom: 12px; }
+    .file-actions { display: flex; gap: 8px; }
+    .file-actions button {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.5);
+      font-size: 12px;
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .btn-open { background: rgba(59, 130, 246, 0.85); }
+    .btn-share { background: rgba(16, 185, 129, 0.85); }
+    .btn-analyze { background: rgba(245, 158, 11, 0.85); }
+    .btn-delete { background: rgba(239, 68, 68, 0.85); }
+    .empty-state {
+      text-align: center;
+      padding: 60px 30px;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+
+    /* 弹窗/对话框 */
+    .dialog-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 10;
+    }
+    .dialog-glass {
+      width: 100%;
+      max-height: 88%;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 28px 28px 0 0;
+      border: 1px solid rgba(255,255,255,0.8);
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .dialog-glass.center {
+      align-self: center;
+      border-radius: 24px;
+      margin: 20px;
+      max-height: none;
+    }
+    .dialog-title {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .metric-card {
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .metric-label { font-size: 11px; color: var(--text-sub); }
+    .metric-value { font-size: 16px; font-weight: 700; color: var(--primary); margin-top: 4px; }
+    .chart-card {
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+    .dialog-text {
+      font-size: 14px;
+      color: var(--text-main);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .dialog-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .dialog-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.6);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dialog-actions .cancel {
+      background: rgba(0,0,0,0.06);
+      color: var(--text-main);
+    }
+    .dialog-actions .confirm {
+      background: rgba(239, 68, 68, 0.85);
+      color: #fff;
+    }
+    .dialog-actions .primary {
+      background: rgba(59, 130, 246, 0.85);
+      color: #fff;
+    }
+    .rate-option {
+      padding: 14px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rate-option input { accent-color: var(--primary); }
+    .rate-option label { flex: 1; font-size: 14px; }
+    .rate-option .rate-desc {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    /* 通知 Toast */
+    .toast {
+      position: absolute;
+      top: 60px;
+      left: 20px;
+      right: 20px;
+      padding: 12px 16px;
+      background: rgba(30, 41, 59, 0.82);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      border-radius: 14px;
+      font-size: 13px;
+      text-align: center;
+      z-index: 20;
+    }
+
+    /* 校准视频 */
+    .calibration-video {
+      width: 100%;
+      height: 220px;
+      background: #000;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .play-overlay {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(4px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 频谱表格 */
+    .spectrum-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      font-size: 13px;
+    }
+    .spectrum-row:last-child { border-bottom: none; }
+    .spectrum-header {
+      font-size: 11px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>磁场分析仪 · 毛玻璃完整原型</h1>
+    <p class="subtitle">不改代码，仅输出完整页面与操作状态</p>
+
+    <div class="nav">
+      <button class="active" onclick="showScreen(0)">启动页</button>
+      <button onclick="showScreen(1)">频率谱</button>
+      <button onclick="showScreen(2)">三轴磁场</button>
+      <button onclick="showScreen(3)">采样率</button>
+      <button onclick="showScreen(4)">文件列表</button>
+      <button onclick="showScreen(5)">分析结果</button>
+      <button onclick="showScreen(6)">校准</button>
+      <button onclick="showScreen(7)">删除确认</button>
+      <button onclick="showScreen(8)">录制中</button>
+    </div>
+
+    <!-- 1. 启动页 -->
+    <div class="screen active">
+      <div class="page-title">启动页 · Splash</div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="splash-content">
+            <div class="logo-glass">
+              <svg width="80" height="80" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="#f8fafc" stroke="#94a3b8" stroke-width="1"/>
+                <path d="M50 10 A40 40 0 0 1 50 90 A20 20 0 0 1 50 50 A20 20 0 0 0 50 10" fill="#64748b"/>
+                <text x="62" y="38" font-size="14" fill="#334155" font-weight="bold">N</text>
+                <text x="32" y="72" font-size="14" fill="#334155" font-weight="bold">S</text>
+                <path d="M15 50 Q30 40 45 50 T75 50" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <div class="app-title">Magnetic</div>
+            <div class="app-subtitle">Magnetic Field Meter</div>
+            <div class="progress-glass"><div class="progress-bar"></div></div>
+            <div class="progress-text">初始化传感器…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 频率谱 -->
+    <div class="screen">
+      <div class="page-title">频率谱 · Spectrum</div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="main-header">
+            <h2>Magnetic Field Analysis</h2>
+            <div class="sample-rate-hint">采样率：默认 · 点击切换</div>
+          </div>
+          <div class="tabs">
+            <div class="tab active">Spectrum</div>
+            <div class="tab">Axes</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Field Strength</div>
+            <div class="card-value">38.2<span class="card-unit">μT</span></div>
+            <div class="card-hint">Geomagnetic field 25~65 μT</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Spectrum (0-15 Hz)</div>
+            <div class="chart-area"><div class="chart-line"></div></div>
+            <div class="status-bar"><div class="status-dot stable"></div><span>Stable · 更新于 14:32</span></div>
+          </div>
+          <div class="card">
+            <div class="spectrum-row"><span class="spectrum-header">Frequency</span><span class="spectrum-header">Energy</span></div>
+            <div class="spectrum-row"><span>0.00 Hz</span><span>-</span></div>
+            <div class="spectrum-row"><span>0.00 Hz</span><span>-</span></div>
+            <div class="spectrum-row"><span>0.00 Hz</span><span>-</span></div>
+            <div class="spectrum-row"><span>0.00 Hz</span><span>-</span></div>
+          </div>
+          <div class="top-actions">
+            <div class="btn">Calibrate</div>
+            <div class="btn">Reset</div>
+          </div>
+          <div class="record-btn">Start Recording</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 三轴磁场 -->
+    <div class="screen">
+      <div class="page-title">三轴磁场 · Axes</div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="main-header"><h2>Magnetic Field Analysis</h2></div>
+          <div class="tabs">
+            <div class="tab">Spectrum</div>
+            <div class="tab active">Axes</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 20px;">
+            <div class="card" style="margin:0; padding:14px;">
+              <div class="card-label" style="color:#ef4444">X Axis</div>
+              <div style="font-size:22px; font-weight:700;">12.4</div>
+            </div>
+            <div class="card" style="margin:0; padding:14px;">
+              <div class="card-label" style="color:#10b981">Y Axis</div>
+              <div style="font-size:22px; font-weight:700;">-8.7</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-label" style="color:#3b82f6">Z Axis</div>
+            <div class="card-value" style="font-size:28px;">34.5<span class="card-unit">μT</span></div>
+          </div>
+          <div class="card">
+            <div class="card-label">X/Y/Z Waveform</div>
+            <div class="chart-area"><div class="chart-line"></div></div>
+          </div>
+          <div class="card" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center;">
+            <div><div class="card-label">Max</div><div style="font-size:16px; font-weight:600;">45.2</div></div>
+            <div><div class="card-label">Min</div><div style="font-size:16px; font-weight:600;">31.1</div></div>
+            <div><div class="card-label">Avg</div><div style="font-size:16px; font-weight:600;">38.4</div></div>
+          </div>
+          <div class="record-btn">Stop Recording</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 采样率选择 -->
+    <div class="screen">
+      <div class="page-title">采样率 · Sample Rate</div>
+      <div class="phone">
+        <div class="phone-screen" style="position:relative;">
+          <div style="padding:50px 20px 12px; text-align:center; font-weight:600; opacity:0.4;">主界面</div>
+          <div class="dialog-overlay">
+            <div class="dialog-glass center">
+              <div class="dialog-title">Select Sample Rate</div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r1" checked>
+                <label for="r1">Slowest <span class="rate-desc">约 5 Hz</span></label>
+              </div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r2">
+                <label for="r2">Medium <span class="rate-desc">约 15 Hz</span></label>
+              </div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r3">
+                <label for="r3">Fast <span class="rate-desc">约 50 Hz</span></label>
+              </div>
+              <div class="rate-option">
+                <input type="radio" name="rate" id="r4">
+                <label for="r4">Fastest <span class="rate-desc">传感器最快频率</span></label>
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel">Cancel</button>
+                <button class="primary">OK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 文件列表 -->
+    <div class="screen">
+      <div class="page-title">文件列表 · Files</div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="list-header">Saved Files</div>
+          <div class="file-item">
+            <div class="file-name">Magnetic_20260619_212045.csv</div>
+            <div class="file-meta">2026-06-19 21:20:45 · 24 pts · 4.6s</div>
+            <div class="file-actions">
+              <button class="btn-open">Open</button>
+              <button class="btn-share">Share</button>
+              <button class="btn-analyze">Analyze</button>
+              <button class="btn-delete">Del</button>
+            </div>
+          </div>
+          <div class="file-item">
+            <div class="file-name">Magnetic_20260619_213147.csv</div>
+            <div class="file-meta">2026-06-19 21:31:47 · 48 pts · 9.2s</div>
+            <div class="file-actions">
+              <button class="btn-open">Open</button>
+              <button class="btn-share">Share</button>
+              <button class="btn-analyze">Analyze</button>
+              <button class="btn-delete">Del</button>
+            </div>
+          </div>
+          <div class="file-item">
+            <div class="file-name">Magnetic_20260619_214008.csv</div>
+            <div class="file-meta">2026-06-19 21:40:08 · 36 pts · 6.8s</div>
+            <div class="file-actions">
+              <button class="btn-open">Open</button>
+              <button class="btn-share">Share</button>
+              <button class="btn-analyze">Analyze</button>
+              <button class="btn-delete">Del</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 分析结果 -->
+    <div class="screen">
+      <div class="page-title">分析结果 · Analysis</div>
+      <div class="phone">
+        <div class="phone-screen" style="position:relative;">
+          <div style="padding:50px 20px 12px; text-align:center; font-weight:600; opacity:0.4;">文件列表</div>
+          <div class="dialog-overlay">
+            <div class="dialog-glass">
+              <div class="dialog-title">Magnetic Field Analysis</div>
+              <div style="text-align:center; font-size:12px; color:var(--text-sub); margin-bottom:16px;">
+                Magnetic_20260619_212045.csv
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card"><div class="metric-label">Freq range</div><div class="metric-value">0.2-2.0Hz</div></div>
+                <div class="metric-card"><div class="metric-label">Sample rate</div><div class="metric-value">5 Hz</div></div>
+                <div class="metric-card"><div class="metric-label">Energy focus</div><div class="metric-value">0.31-0.62</div></div>
+                <div class="metric-card"><div class="metric-label">Spectrum Type</div><div class="metric-value" style="font-size:12px;">Ultra-low freq</div></div>
+              </div>
+              <div class="chart-card"><div class="chart-title">Time Waveform</div><div class="chart-area"><div class="chart-line"></div></div></div>
+              <div class="chart-card"><div class="chart-title">FFT Amplitude</div><div class="chart-area"><div class="chart-line"></div></div></div>
+              <div class="chart-card"><div class="chart-title">Welch PSD</div><div class="chart-area"><div class="chart-line"></div></div></div>
+              <div class="dialog-actions">
+                <button class="cancel" style="flex:1;">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. 校准 -->
+    <div class="screen">
+      <div class="page-title">校准 · Calibration</div>
+      <div class="phone">
+        <div class="phone-screen" style="position:relative; background:rgba(0,0,0,0.35);">
+          <div class="dialog-overlay" style="background:rgba(0,0,0,0.45); align-items:center;">
+            <div class="dialog-glass center" style="max-height:none;">
+              <div class="dialog-title">Calibration Guide</div>
+              <div class="calibration-video">
+                <div class="play-overlay">▶</div>
+              </div>
+              <div class="dialog-text" style="text-align:left; font-size:13px;">
+                请按视频示意，将设备在空中做“8”字运动，以校准磁场传感器。
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. 删除确认 -->
+    <div class="screen">
+      <div class="page-title">删除确认 · Delete</div>
+      <div class="phone">
+        <div class="phone-screen" style="position:relative;">
+          <div style="padding:50px 20px 12px; text-align:center; font-weight:600; opacity:0.4;">文件列表</div>
+          <div class="dialog-overlay">
+            <div class="dialog-glass center" style="max-height:none;">
+              <div class="dialog-title">Delete File</div>
+              <div class="dialog-text">
+                确定要删除文件吗？<br>
+                <strong>Magnetic_20260619_212045.csv</strong>
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel">Cancel</button>
+                <button class="confirm">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. 录制中 -->
+    <div class="screen">
+      <div class="page-title">录制中 · Recording</div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="toast">Recording started</div>
+          <div class="main-header">
+            <h2>Magnetic Field Analysis</h2>
+            <div class="sample-rate-hint">采样率：Fastest</div>
+          </div>
+          <div class="tabs">
+            <div class="tab active">Spectrum</div>
+            <div class="tab">Axes</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Field Strength</div>
+            <div class="card-value" style="color:var(--danger);">42.7<span class="card-unit">μT</span></div>
+            <div class="card-hint">Recording · 128 pts</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Spectrum (0-15 Hz)</div>
+            <div class="chart-area"><div class="chart-line"></div></div>
+            <div class="status-bar"><div class="status-dot warning"></div><span>Unstable · 更新于 14:33</span></div>
+          </div>
+          <div class="top-actions">
+            <div class="btn">Calibrate</div>
+            <div class="btn">Reset</div>
+          </div>
+          <div class="record-btn recording">Pause Recording</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(idx) {
+      document.querySelectorAll('.screen').forEach((s, i) => s.classList.toggle('active', i === idx));
+      document.querySelectorAll('.nav button').forEach((b, i) => b.classList.toggle('active', i === idx));
+    }
+  </script>
+</body>
+</html>
