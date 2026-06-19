@@ -1,0 +1,47 @@
+<resources>
+    <!-- 背景色 -->
+    <color name="bg">#F7F8FA</color>
+    <color name="card">#FFFFFF</color>
+    <color name="card_border">#E5E7EB</color>
+    
+    <!-- 文本颜色 -->
+    <color name="text_primary">#1E1E2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_tertiary">#9CA3AF</color>
+    
+    <!-- 分割线 -->
+    <color name="divider">#E5E7EB</color>
+    
+    <!-- 状态颜色 -->
+    <color name="stable">#10B981</color>
+    <color name="warning">#F59E0B</color>
+    <color name="danger">#EF4444</color>
+    
+    <!-- 采样率 -->
+    <color name="sample_rate_bg">#EFF6FF</color>
+    <color name="sample_rate_border">#BFDBFE</color>
+    <color name="sample_rate_text">#3B82F6</color>
+    
+    <!-- 分段控件 -->
+    <color name="segment_bg">#F3F4F6</color>
+    <color name="segment_active">#3B82F6</color>
+    <color name="segment_active_text">#FFFFFF</color>
+    
+    <!-- 轴向颜色 -->
+    <color name="axis_x">#EF4444</color>
+    <color name="axis_y">#10B981</color>
+    <color name="axis_z">#3B82F6</color>
+    
+    <!-- 图表 -->
+    <color name="chart_grid">#F3F4F6</color>
+    <color name="card_bg">#F9FAFB</color>
+    
+    <!-- 主色调 -->
+    <color name="primary">#3B82F6</color>
+    
+    <!-- 卡片背景 -->
+    <color name="stat_card_bg">#FFFFFF</color>
+    <color name="stat_card_text">#1E1E2E</color>
+    <color name="dialog_bg">#FFFFFF</color>
+    <color name="chart_card_bg">#FFFFFF</color>
+</resources>

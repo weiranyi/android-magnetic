@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 对话框淡出 + 下滑到屏幕底部退出 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="250"
+    android:interpolator="@android:interpolator/accelerate_cubic">
+
+    <!-- 透明度：1 → 0 -->
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0" />
+
+    <!-- 位移：从原位置移到屏幕底部 100% 高度 -->
+    <translate
+        android:fromYDelta="0"
+        android:toYDelta="100%p"
+        android:fillAfter="true" />
+
+</set>

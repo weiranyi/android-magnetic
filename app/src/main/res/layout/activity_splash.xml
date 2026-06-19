@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:padding="32dp">
+
+    <!-- 应用图标：保留原 NS logo，背景已抠透明，无方形阴影 -->
+    <ImageView
+        android:id="@+id/splashLogo"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@mipmap/ic_launcher_transparent"
+        android:background="@null"
+        android:elevation="0dp"
+        android:translationZ="0dp"
+        android:scaleType="fitCenter"
+        android:outlineProvider="none"
+        android:clipToOutline="false"
+        android:padding="0dp"
+        android:adjustViewBounds="true"
+        android:importantForAccessibility="no"
+        android:contentDescription="@string/app_name"
+        android:layout_marginBottom="24dp" />
+
+    <!-- 应用名称 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#212121"
+        android:gravity="center" />
+
+    <!-- 副标题（可选） -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name_chinese"
+        android:textSize="16sp"
+        android:textColor="#757575"
+        android:gravity="center"
+        android:layout_marginTop="8dp" />
+
+    <!-- 启动进度条 -->
+    <ProgressBar
+        android:id="@+id/splashProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="200dp"
+        android:layout_height="6dp"
+        android:layout_marginTop="48dp"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/splash_progress_horizontal"
+        android:indeterminate="false" />
+
+    <!-- 进度百分比文字 -->
+    <TextView
+        android:id="@+id/splashProgressText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="0%"
+        android:textSize="13sp"
+        android:textColor="#9E9E9E" />
+
+</LinearLayout>
