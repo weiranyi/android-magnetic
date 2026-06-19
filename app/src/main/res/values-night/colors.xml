@@ -1,38 +1,44 @@
 <resources>
-    <color name="bg">#000000</color>
-    <color name="card">#1F1F22</color>
-    <color name="card_border">#4DFFFFFF</color>
+    <color name="bg">#0B0D12</color>
+    <color name="card">#151820</color>
+    <color name="card_border">#2A3140</color>
 
     <!-- 毛玻璃色（夜间） -->
-    <color name="glass_bg">#CC1F1F22</color>
-    <color name="glass_border">#4DFFFFFF</color>
-    <color name="glass_primary">#D955A7FF</color>
-    <color name="glass_primary_border">#6655A7FF</color>
-    <color name="glass_danger">#D9FF6767</color>
-    <color name="glass_success">#D94CEB8C</color>
-    <color name="glass_gray">#D9808080</color>
-    <color name="glass_overlay">#B3000000</color>
+    <color name="glass_bg">#E0151820</color>
+    <color name="glass_border">#26FFFFFF</color>
+    <color name="glass_primary">#E07C9EFF</color>
+    <color name="glass_primary_border">#557C9EFF</color>
+    <color name="glass_danger">#E0FF8A8A</color>
+    <color name="glass_success">#E07EE8A8</color>
+    <color name="glass_gray">#E09AA3B8</color>
+    <color name="glass_overlay">#B30B0D12</color>
 
-    <color name="text_primary">#F4F5FF</color>
-    <color name="text_secondary">#9B9BA5</color>
-    <color name="divider">#3A3A3D</color>
-    <color name="stable">#4CEB8C</color>
-    <color name="warning">#F4B84D</color>
-    <color name="danger">#FF6767</color>
-    <color name="sample_rate_bg">#2A2A2E</color>
-    <color name="sample_rate_border">#3A3A40</color>
-    <color name="sample_rate_text">#55A7FF</color>
-    <color name="segment_bg">#1F1F22</color>
-    <color name="segment_active">#FFFFFF</color>
-    <color name="segment_active_text">#000000</color>
-    <color name="axis_x">#FF5E5E</color>
-    <color name="axis_y">#62E77A</color>
-    <color name="axis_z">#55A7FF</color>
-    <color name="chart_grid">#343438</color>
-    <color name="card_bg">#CC2A2A2E</color>
-    <color name="primary">#55A7FF</color>
-    <color name="stat_card_bg">#CC2A2A2E</color>
-    <color name="stat_card_text">#F4F5FF</color>
-    <color name="dialog_bg">#E61F1F22</color>
-    <color name="chart_card_bg">#CC1F1F22</color>
+    <color name="text_primary">#F5F7FF</color>
+    <color name="text_secondary">#9AA3B8</color>
+    <color name="text_tertiary">#6B7280</color>
+    <color name="divider">#1F2430</color>
+    <color name="stable">#7EE8A8</color>
+    <color name="warning">#FFD18A</color>
+    <color name="danger">#FF8A8A</color>
+    <color name="sample_rate_bg">#1A1F2E</color>
+    <color name="sample_rate_border">#2A3140</color>
+    <color name="sample_rate_text">#7C9EFF</color>
+    <color name="segment_bg">#151820</color>
+    <color name="segment_active">#7C9EFF</color>
+    <color name="segment_active_text">#FFFFFF</color>
+    <color name="axis_x">#FF8A8A</color>
+    <color name="axis_y">#7EE8A8</color>
+    <color name="axis_z">#7C9EFF</color>
+    <color name="chart_grid">#1F2430</color>
+    <color name="card_bg">#E01A1F2E</color>
+    <color name="primary">#7C9EFF</color>
+    <color name="stat_card_bg">#E01A1F2E</color>
+    <color name="stat_card_text">#F5F7FF</color>
+    <color name="dialog_bg">#E61A1F2E</color>
+    <color name="chart_card_bg">#E0151820</color>
+
+    <!-- Splash 专用文字颜色（暗色模式覆盖） -->
+    <color name="splash_text_primary">#F1F5F9</color>
+    <color name="splash_text_secondary">#94A3B8</color>
+    <color name="splash_text_tertiary">#64748B</color>
 </resources>

@@ -48,15 +48,13 @@
             android:layout_width="match_parent"
             android:layout_height="280dp"
             android:layout_marginTop="12dp"
-            app:cardBackgroundColor="@color/glass_bg"
+            app:cardBackgroundColor="@color/card"
             app:cardCornerRadius="14dp"
             app:cardElevation="0dp">
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="1dp"
-                android:background="@drawable/card_background">
+                android:layout_height="match_parent">
 
                 <VideoView
                     android:id="@+id/calibrationVideoView"

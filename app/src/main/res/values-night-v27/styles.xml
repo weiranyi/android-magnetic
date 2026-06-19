@@ -7,5 +7,9 @@
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:alertDialogTheme">@style/GlassAlertDialog</item>
+        <!-- 启动页文字颜色属性（暗色模式，API 27+） -->
+        <item name="textPrimaryColor">#F5F7FF</item>
+        <item name="textSecondaryColor">#9AA3B8</item>
+        <item name="textTertiaryColor">#6B7280</item>
     </style>
 </resources>

@@ -5,5 +5,28 @@
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:alertDialogTheme">@style/GlassAlertDialog</item>
+        <!-- 启动页文字颜色属性（暗色模式） -->
+        <item name="textPrimaryColor">#F1F5F9</item>
+        <item name="textSecondaryColor">#94A3B8</item>
+        <item name="textTertiaryColor">#64748B</item>
+    </style>
+
+    <!-- 深色模式毛玻璃 AlertDialog 主题 -->
+    <style name="GlassAlertDialog" parent="android:style/Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.55</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#B8BFCF</item>
+    </style>
+
+    <!-- SplashActivity 暗色主题 -->
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/bg_glass_gradient</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#00000000</item>
+        <item name="android:navigationBarColor">#00000000</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
     </style>
 </resources>

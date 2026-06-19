@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Magnetic</string>
-    <string name="app_name_chinese">Magnetic Field Meter</string>
+    <string name="app_name_chinese">磁场测量仪</string>
+    <string name="app_name_subtitle">Magnetic Field Meter</string>
     <string name="tab_spectrum">Spectrum</string>
     <string name="tab_axes">Axes</string>
     <string name="field_strength">Field Strength</string>

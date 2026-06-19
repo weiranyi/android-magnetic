@@ -54,4 +54,9 @@
     <color name="stat_card_text">#1E1E2E</color>
     <color name="dialog_bg">#E6FFFFFF</color>
     <color name="chart_card_bg">#CCFFFFFF</color>
+
+    <!-- Splash 专用文字颜色（需要在暗色模式下覆盖） -->
+    <color name="splash_text_primary">#0F172A</color>
+    <color name="splash_text_secondary">#475569</color>
+    <color name="splash_text_tertiary">#94A3B8</color>
 </resources>

@@ -623,7 +623,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         if (confirmDialog != null && confirmDialog.isShowing()) {
             return;
         }
-        CharSequence[] labels = new CharSequence[SAMPLE_RATE_OPTIONS_HZ.length];
+        final CharSequence[] labels = new CharSequence[SAMPLE_RATE_OPTIONS_HZ.length];
         int checkedIndex = -1;
         int currentRate = MagneticSensorService.getTargetSampleRateHz();
         for (int i = 0; i < SAMPLE_RATE_OPTIONS_HZ.length; i++) {
@@ -633,7 +633,8 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
                 checkedIndex = i;
             }
         }
-        confirmDialog = new android.app.AlertDialog.Builder(this)
+        final int primaryColor = getColorCompat(R.color.text_primary);
+        confirmDialog = new android.app.AlertDialog.Builder(this, R.style.GlassAlertDialog)
                 .setTitle(R.string.sample_rate_dialog_title)
                 .setSingleChoiceItems(labels, checkedIndex, (dialog, which) -> {
                     int selectedRate = SAMPLE_RATE_OPTIONS_HZ[which];
@@ -650,6 +651,35 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         confirmDialog.setOnDismissListener(dialog -> confirmDialog = null);
         confirmDialog.show();
         applyGlassDialogBackground(confirmDialog);
+        // 确保列表项文字颜色
+        final android.widget.ListView lv = confirmDialog.getListView();
+        if (lv != null) {
+            tintListViewItems(lv, primaryColor);
+            lv.addOnLayoutChangeListener(new android.view.View.OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(android.view.View v, int left, int top, int right, int bottom,
+                                           int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    tintListViewItems(lv, primaryColor);
+                }
+            });
+        }
+    }
+
+    private static void tintListViewItems(android.widget.ListView listView, int textColor) {
+        for (int i = 0, n = listView.getChildCount(); i < n; i++) {
+            android.view.View child = listView.getChildAt(i);
+            if (child instanceof android.widget.TextView) {
+                ((android.widget.TextView) child).setTextColor(textColor);
+            } else if (child instanceof android.view.ViewGroup) {
+                android.view.ViewGroup vg = (android.view.ViewGroup) child;
+                for (int j = 0, m = vg.getChildCount(); j < m; j++) {
+                    android.view.View inner = vg.getChildAt(j);
+                    if (inner instanceof android.widget.TextView) {
+                        ((android.widget.TextView) inner).setTextColor(textColor);
+                    }
+                }
+            }
+        }
     }
 
     private void applyGlassDialogBackground(android.app.Dialog dialog) {
@@ -660,14 +690,29 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         if (window != null) {
             window.setBackgroundDrawableResource(R.drawable.dialog_background);
         }
+        final int primaryColor = getColorCompat(R.color.text_primary);
         if (dialog instanceof android.app.AlertDialog) {
-            android.widget.ListView listView = ((android.app.AlertDialog) dialog).getListView();
+            android.app.AlertDialog ad = (android.app.AlertDialog) dialog;
+            android.widget.ListView listView = ad.getListView();
             if (listView != null) {
                 listView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
                 listView.setDivider(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
                 listView.setDividerHeight(0);
                 listView.setSelector(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             }
+            // 设置按钮和标题文字颜色
+            android.widget.Button pos = ad.getButton(android.app.Dialog.BUTTON_POSITIVE);
+            android.widget.Button neg = ad.getButton(android.app.Dialog.BUTTON_NEGATIVE);
+            android.widget.Button neu = ad.getButton(android.app.Dialog.BUTTON_NEUTRAL);
+            if (pos != null) pos.setTextColor(primaryColor);
+            if (neg != null) neg.setTextColor(primaryColor);
+            if (neu != null) neu.setTextColor(primaryColor);
+            // 标题
+            android.widget.TextView titleTv = ad.findViewById(android.R.id.title);
+            if (titleTv != null) titleTv.setTextColor(primaryColor);
+            // 消息文本
+            android.widget.TextView messageTv = ad.findViewById(android.R.id.message);
+            if (messageTv != null) messageTv.setTextColor(primaryColor);
         }
     }
 
@@ -1269,7 +1314,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
 
     private void analyzeFile(File file) {
         if (isFinishing() || isDestroyed()) return;
-        android.app.AlertDialog progressDialog = new android.app.AlertDialog.Builder(this)
+        android.app.AlertDialog progressDialog = new android.app.AlertDialog.Builder(this, R.style.GlassAlertDialog)
                 .setTitle(R.string.analyze_title)
                 .setMessage(R.string.analyze_loading)
                 .setCancelable(false)
@@ -1867,7 +1912,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     private void deleteFile(File file) {
         
         if (isFinishing() || isDestroyed()) return;
-        confirmDialog = new android.app.AlertDialog.Builder(this)
+        confirmDialog = new android.app.AlertDialog.Builder(this, R.style.GlassAlertDialog)
                 .setTitle(R.string.btn_delete)
                 .setMessage(getString(R.string.delete_confirm, file.getName()))
                 .setPositiveButton(R.string.btn_delete, (dialog, which) -> {

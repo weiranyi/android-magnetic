@@ -5,6 +5,10 @@
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:alertDialogTheme">@style/GlassAlertDialog</item>
+        <!-- 启动页文字颜色属性（亮色模式） -->
+        <item name="textPrimaryColor">#0F172A</item>
+        <item name="textSecondaryColor">#475569</item>
+        <item name="textTertiaryColor">#94A3B8</item>
     </style>
 
     <!-- 毛玻璃 AlertDialog 主题 -->
@@ -12,11 +16,24 @@
         <item name="android:windowBackground">@drawable/dialog_background</item>
         <item name="android:backgroundDimEnabled">true</item>
         <item name="android:backgroundDimAmount">0.35</item>
+        <item name="android:textColorPrimary">#1E1E2E</item>
+        <item name="android:textColorSecondary">#6B7280</item>
     </style>
 
     <!-- 对话框进出动画 -->
     <style name="DialogAnimation">
         <item name="android:windowEnterAnimation">@anim/dialog_enter</item>
         <item name="android:windowExitAnimation">@anim/dialog_exit</item>
+    </style>
+
+    <!-- SplashActivity 专用主题（基于 AppCompat，支持亮/暗色） -->
+    <style name="SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/bg_glass_gradient</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <!-- 不使用 translucent，避免 MIUI 崩溃 -->
+        <item name="android:fitsSystemWindows">false</item>
     </style>
 </resources>

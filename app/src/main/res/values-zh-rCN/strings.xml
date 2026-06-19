@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">磁场测量仪</string>
     <string name="app_name_chinese">磁场测量仪</string>
+    <string name="app_name_subtitle">Magnetic Field Meter</string>
     <string name="tab_spectrum">频率谱</string>
     <string name="tab_axes">三轴磁场</string>
     <string name="field_strength">磁场强度</string>
