@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace "com.example.magneticfield"
+    namespace "io.github.weiranyi.magneticfield"
     compileSdk 35
 
     buildFeatures {
@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.magneticfield"
+        applicationId "io.github.weiranyi.magneticfield"
         minSdk 24
         targetSdk 35
         versionCode 1

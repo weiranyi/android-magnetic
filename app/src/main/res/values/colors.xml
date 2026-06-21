@@ -14,48 +14,53 @@
     <color name="glass_gray">#D98E8E93</color>
     <color name="glass_overlay">#B3000000</color>
 
+    <!-- 背景渐变着色（用于 bg_glass_gradient 的彩色光晕） -->
+    <color name="bg_tint_primary">#1A3B82F6</color>
+    <color name="bg_tint_success">#1610B981</color>
+    <color name="bg_tint_secondary">#148B5CF6</color>
+    <color name="bg_tint_transparent">#00FFFFFF</color>
+
     <!-- 文本颜色 -->
     <color name="text_primary">#1E1E2E</color>
     <color name="text_secondary">#6B7280</color>
     <color name="text_tertiary">#9CA3AF</color>
-    
+
     <!-- 分割线 -->
     <color name="divider">#E5E7EB</color>
-    
+
     <!-- 状态颜色 -->
     <color name="stable">#10B981</color>
     <color name="warning">#F59E0B</color>
     <color name="danger">#EF4444</color>
-    
+
     <!-- 采样率 -->
     <color name="sample_rate_bg">#EFF6FF</color>
     <color name="sample_rate_border">#BFDBFE</color>
     <color name="sample_rate_text">#3B82F6</color>
-    
+
     <!-- 分段控件 -->
     <color name="segment_bg">#F3F4F6</color>
     <color name="segment_active">#3B82F6</color>
     <color name="segment_active_text">#FFFFFF</color>
-    
+
     <!-- 轴向颜色 -->
     <color name="axis_x">#EF4444</color>
     <color name="axis_y">#10B981</color>
     <color name="axis_z">#3B82F6</color>
-    
+
     <!-- 图表 -->
     <color name="chart_grid">#F3F4F6</color>
-    <color name="card_bg">#CCFFFFFF</color>
-    
+
     <!-- 主色调 -->
     <color name="primary">#3B82F6</color>
-    
-    <!-- 卡片背景 -->
+
+    <!-- 卡片/弹窗背景 -->
+    <color name="card_bg">#CCFFFFFF</color>
     <color name="stat_card_bg">#CCFFFFFF</color>
     <color name="stat_card_text">#1E1E2E</color>
     <color name="dialog_bg">#E6FFFFFF</color>
-    <color name="chart_card_bg">#CCFFFFFF</color>
 
-    <!-- Splash 专用文字颜色（需要在暗色模式下覆盖） -->
+    <!-- Splash 专用文字颜色 -->
     <color name="splash_text_primary">#0F172A</color>
     <color name="splash_text_secondary">#475569</color>
     <color name="splash_text_tertiary">#94A3B8</color>

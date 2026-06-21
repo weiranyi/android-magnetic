@@ -3,5 +3,5 @@
 -dontwarn org.apache.commons.math3.**
 
 
--keep class com.example.magneticfield.MainActivity$SpectrumPeak { *; }
--keep class com.example.magneticfield.MainActivity$RecordEntry { *; }
+-keep class io.github.weiranyi.magneticfield.SpectrumAnalyzer$SpectrumPeak { *; }
+-keep class io.github.weiranyi.magneticfield.MainActivity$RecordEntry { *; }

@@ -24,9 +24,10 @@
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/bg_glass_gradient</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">#00000000</item>
-        <item name="android:navigationBarColor">#00000000</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
+        <!-- 不使用 translucent，避免 MIUI 崩溃 -->
+        <item name="android:fitsSystemWindows">false</item>
     </style>
 </resources>

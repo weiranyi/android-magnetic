@@ -1,4 +1,4 @@
-package com.example.magneticfield;
+package io.github.weiranyi.magneticfield;
 
 import android.Manifest;
 import android.app.Activity;
@@ -40,17 +40,8 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
-import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.transform.DftNormalization;
-import org.apache.commons.math3.transform.FastFourierTransformer;
-import org.apache.commons.math3.transform.TransformType;
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +54,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends Activity implements MagneticSensorService.SampleListener {
-    private static final int HISTORY_SIZE = 8;
     private static final int DEFAULT_SPECTRUM_SIZE = 1024;
     private static final int AUTO_SAMPLE_RATE_ESTIMATE_COUNT = 8;
     private static final int AXES_HISTORY_SIZE = 64;
@@ -72,7 +62,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             5,
             15,
             50,
-            MagneticSensorService.SAMPLE_RATE_FASTEST
+            SensorRateController.SAMPLE_RATE_FASTEST
     };
     private static final int[] SAMPLE_RATE_OPTION_LABELS = {
             R.string.sample_rate_option_slowest,
@@ -84,7 +74,6 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     
     
     private static final int REQUEST_NOTIFICATION_PERMISSION = 100;
-    private static final String RECORD_DIR = "magnetic_records";
     private static final String TAG = "MainActivity";
     
     
@@ -176,10 +165,6 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     private boolean finishingFromBackgroundTimeout;
 
     
-    private static final FastFourierTransformer FFT_TRANSFORMER =
-            new FastFourierTransformer(DftNormalization.STANDARD);
-
-    
     private static final ThreadLocal<SimpleDateFormat> UI_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
@@ -192,14 +177,6 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         }
     };
-    
-    private static final ThreadLocal<SimpleDateFormat> CSV_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("HH:mm:ss", Locale.US);
-        }
-    };
-
     
     private volatile boolean isRecording = false;
     private volatile boolean isRecordingSaving = false;
@@ -460,6 +437,8 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         super.onDestroy();
         // 停止录制按钮动画，防止内存泄漏
         stopRecordButtonAnimation();
+        stopFieldAnimators();
+        stopDotRippleAnimator();
         if (latestActivityRef.get() == this) {
             latestActivityRef = new WeakReference<>(null);
         }
@@ -783,10 +762,10 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             updateRecordButtonState();
             return;
         }
+        MagneticSensorService.startRecording();
         isRecording = true;
         isRecordingSaving = false;
         recordingStopPending = false;
-        MagneticSensorService.startRecording();
         updateRecordButtonState();
         Toast.makeText(this, R.string.recording, Toast.LENGTH_SHORT).show();
     }
@@ -796,6 +775,10 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     }
 
     private void stopRecordingAndSave(Runnable afterSave) {
+        // 通过原子方法一次性捕获参考时间，保证 wallTime 和 elapsedNs 来自同一录制会话
+        final long[] refTimes = MagneticSensorService.getRecordingReferenceTimes();
+        final long refWallTimeMs = refTimes[0];
+        final long refElapsedNs = refTimes[1];
         final List<MagneticSensorService.RecordingSample> dataToSave;
         if (!hasActiveRecording()) {
             if (afterSave != null) {
@@ -842,8 +825,12 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         Runnable saveTask = () -> {
             String error = null;
             try {
-                error = saveToExcel(dataToSave, dir, fileName,
+                boolean saved = RecordingFileManager.saveToCsv(dataToSave, dir, fileName,
+                        refWallTimeMs, refElapsedNs,
                         headerTime, headerX, headerY, headerZ, headerTotal);
+                if (!saved) {
+                    error = "Write failed";
+                }
             } finally {
                 recordingSaveTaskCount.decrementAndGet();
             }
@@ -907,7 +894,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
 
     private void startRecordPulseAnimation() {
         // 红色脉冲扩散动画（录制中）
-        recordPulseAnimator = ValueAnimator.ofFloat(1.0f, 1.15f);
+        recordPulseAnimator = ValueAnimator.ofFloat(1.0f, 1.08f);
         recordPulseAnimator.setDuration(1000);
         recordPulseAnimator.setRepeatMode(ValueAnimator.RESTART);
         recordPulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
@@ -922,7 +909,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
 
     private void startRecordBreathAnimation() {
         // 呼吸动画（未录制时）
-        recordBreathAnimator = ValueAnimator.ofFloat(1.0f, 1.03f);
+        recordBreathAnimator = ValueAnimator.ofFloat(1.0f, 1.02f);
         recordBreathAnimator.setDuration(2000);
         recordBreathAnimator.setRepeatMode(ValueAnimator.REVERSE);
         recordBreathAnimator.setRepeatCount(ValueAnimator.INFINITE);
@@ -951,42 +938,31 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         }
     }
 
-    private String saveToExcel(List<MagneticSensorService.RecordingSample> data, File dir, String fileName,
-                               String headerTime, String headerX, String headerY,
-                               String headerZ, String headerTotal) {
-        File file = new File(dir, fileName);
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(file), StandardCharsets.UTF_8))) {
-
-            
-            writer.write('\uFEFF');
-
-            
-            writer.write(headerTime + "," + headerX + "," + headerY + "," + headerZ + "," + headerTotal);
-            writer.newLine();
-
-            
-            
-            for (MagneticSensorService.RecordingSample entry : data) {
-                writer.write(String.format(Locale.US, "'%s',%.3f,%.3f,%.3f,%.3f",
-                        formatNanos(entry.timestampNs),
-                        entry.x, entry.y, entry.z, entry.total));
-                writer.newLine();
-            }
-            return null;
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to save CSV", e);
-            if (file.exists() && !file.delete()) {
-                Log.w(TAG, "Failed to delete incomplete CSV: " + file);
-            }
-            return e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+    private void stopFieldAnimators() {
+        if (fieldValueAnimator != null) {
+            fieldValueAnimator.cancel();
+            fieldValueAnimator = null;
+        }
+        if (xAxisAnimator != null) {
+            xAxisAnimator.cancel();
+            xAxisAnimator = null;
+        }
+        if (yAxisAnimator != null) {
+            yAxisAnimator.cancel();
+            yAxisAnimator = null;
+        }
+        if (zAxisAnimator != null) {
+            zAxisAnimator.cancel();
+            zAxisAnimator = null;
         }
     }
 
-    
-
-
-
+    private void stopDotRippleAnimator() {
+        if (dotRippleAnimator != null) {
+            dotRippleAnimator.cancel();
+            dotRippleAnimator = null;
+        }
+    }
 
     // ── 动画辅助方法 ──
 
@@ -1143,24 +1119,6 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
                 .start();
     }
 
-    private String formatNanos(long timestampNs) {
-        
-        long bootNanos = SystemClock.elapsedRealtimeNanos();
-        long nowNs = System.currentTimeMillis() * 1_000_000L;
-        
-        long estimatedNs = nowNs - (bootNanos - timestampNs);
-        long estimatedMs = estimatedNs / 1_000_000L;
-        SimpleDateFormat sdf = CSV_TIME_FORMAT.get();
-        String timePart = sdf.format(new Date(estimatedMs));
-        long fractionNs = Math.floorMod(estimatedNs, 1_000_000_000L);
-        int millis = (int) (fractionNs / 1_000_000L);
-        int micros = (int) ((fractionNs / 1_000L) % 1_000L);
-        int nanos = (int) (fractionNs % 1_000L);
-        return String.format(Locale.US, "%s.%03d.%03d.%03d", timePart, millis, micros, nanos);
-    }
-
-    
-
     private void refreshFileList() {
         final File dir = getRecordDir();
         Runnable loadTask = () -> {
@@ -1246,13 +1204,13 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         TextView btnOpen = new TextView(this);
         btnOpen.setText(R.string.btn_open);
         btnOpen.setTextColor(0xFFFFFFFF);
-        btnOpen.setTextSize(13);
+        btnOpen.setTextSize(14);
         btnOpen.setGravity(Gravity.CENTER);
         btnOpen.setBackgroundResource(R.drawable.action_button_bg);
-        btnOpen.setPadding(0, dp(8), 0, dp(8));
+        btnOpen.setPadding(0, dp(10), 0, dp(10));
         LinearLayout.LayoutParams openParams = new LinearLayout.LayoutParams(
                 0,
-                dp(36));
+                dp(44));
         openParams.weight = 1;
         openParams.setMarginEnd(dp(8));
         btnOpen.setLayoutParams(openParams);
@@ -1263,13 +1221,13 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         TextView btnShare = new TextView(this);
         btnShare.setText(R.string.btn_share);
         btnShare.setTextColor(0xFFFFFFFF);
-        btnShare.setTextSize(13);
+        btnShare.setTextSize(14);
         btnShare.setGravity(Gravity.CENTER);
         btnShare.setBackgroundResource(R.drawable.action_button_bg);
-        btnShare.setPadding(0, dp(8), 0, dp(8));
+        btnShare.setPadding(0, dp(10), 0, dp(10));
         LinearLayout.LayoutParams shareParams = new LinearLayout.LayoutParams(
                 0,
-                dp(36));
+                dp(44));
         shareParams.weight = 1;
         shareParams.setMarginEnd(dp(8));
         btnShare.setLayoutParams(shareParams);
@@ -1280,13 +1238,13 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         TextView btnAnalyze = new TextView(this);
         btnAnalyze.setText(R.string.btn_analyze);
         btnAnalyze.setTextColor(0xFFFFFFFF);
-        btnAnalyze.setTextSize(13);
+        btnAnalyze.setTextSize(14);
         btnAnalyze.setGravity(Gravity.CENTER);
         btnAnalyze.setBackgroundResource(R.drawable.analyze_button_bg);
-        btnAnalyze.setPadding(0, dp(8), 0, dp(8));
+        btnAnalyze.setPadding(0, dp(10), 0, dp(10));
         LinearLayout.LayoutParams analyzeParams = new LinearLayout.LayoutParams(
                 0,
-                dp(36));
+                dp(44));
         analyzeParams.weight = 1;
         analyzeParams.setMarginEnd(dp(8));
         btnAnalyze.setLayoutParams(analyzeParams);
@@ -1296,13 +1254,13 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         TextView btnDelete = new TextView(this);
         btnDelete.setText(R.string.btn_delete);
         btnDelete.setTextColor(0xFFFFFFFF);
-        btnDelete.setTextSize(13);
+        btnDelete.setTextSize(14);
         btnDelete.setGravity(Gravity.CENTER);
         btnDelete.setBackgroundResource(R.drawable.delete_button_bg);
-        btnDelete.setPadding(0, dp(8), 0, dp(8));
+        btnDelete.setPadding(0, dp(10), 0, dp(10));
         LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
                 0,
-                dp(36));
+                dp(44));
         deleteParams.weight = 1;
         btnDelete.setLayoutParams(deleteParams);
         btnDelete.setOnClickListener(withPressEffect(v -> deleteFile(file)));
@@ -1963,7 +1921,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             
             external = getFilesDir();
         }
-        File dir = new File(external, RECORD_DIR);
+        File dir = new File(external, RecordingFileManager.RECORD_DIR);
         if (!dir.exists()) {
             if (!dir.mkdirs()) {
                 Log.w(TAG, "Failed to create record directory: " + dir);
@@ -2051,7 +2009,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     }
 
     private float getEstimatedSampleRateHz(int sampleRateSetting) {
-        if (sampleRateSetting == MagneticSensorService.SAMPLE_RATE_FASTEST) {
+        if (sampleRateSetting == SensorRateController.SAMPLE_RATE_FASTEST) {
             return Math.max(50f, MagneticSensorService.getActualSampleRateHz());
         }
         return sampleRateSetting;
@@ -2230,7 +2188,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         int oldestIndex = sampleCount < spectrumSize ? 0 : sampleIndex;
         int newestIndex = (sampleIndex - 1 + spectrumSize) % spectrumSize;
         int intervals = sampleCount < spectrumSize ? sampleCount - 1 : spectrumSize - 1;
-        return calculateSampleRate(timestampSamples[oldestIndex], timestampSamples[newestIndex], intervals);
+        return SpectrumAnalyzer.calculateSampleRate(timestampSamples[oldestIndex], timestampSamples[newestIndex], intervals);
     }
 
     private void renderSpectrum() {
@@ -2248,14 +2206,26 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             return;
         }
 
-        SpectrumPeak[] peaks = calculateSpectrumPeaks();
+        final int snapshotIndex;
+        final int snapshotSize;
+        final float[] snapshotMagnitudes;
+        final long[] snapshotTimestamps;
+        synchronized (spectrumSamplesLock) {
+            snapshotIndex = sampleIndex;
+            snapshotSize = spectrumSize;
+            // clone 防止 calculateSpectrumPeaks 执行期间传感器线程修改数组
+            snapshotMagnitudes = magnitudeSamples.clone();
+            snapshotTimestamps = timestampSamples.clone();
+        }
+        SpectrumAnalyzer.SpectrumPeak[] peaks = SpectrumAnalyzer.calculateSpectrumPeaks(
+                    snapshotMagnitudes, snapshotTimestamps, snapshotIndex, snapshotSize);
         if (peaks == null) {
             renderPlaceholderRows(getString(R.string.sample_rate_placeholder), getString(R.string.dash));
             return;
         }
 
-        for (int i = 0; i < HISTORY_SIZE; i++) {
-            SpectrumPeak peak = peaks[i];
+        for (int i = 0; i < SpectrumAnalyzer.HISTORY_SIZE; i++) {
+            SpectrumAnalyzer.SpectrumPeak peak = peaks[i];
             String frequencyText = peak.frequency > 0f
                     ? String.format(Locale.US, getString(R.string.frequency_format), peak.frequency)
                     : getString(R.string.sample_rate_placeholder);
@@ -2273,7 +2243,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
 
     private void renderPlaceholderRows(String left, String right) {
         ensureSpectrumRows();
-        for (int i = 0; i < HISTORY_SIZE; i++) {
+        for (int i = 0; i < SpectrumAnalyzer.HISTORY_SIZE; i++) {
             spectrumFreqTexts[i].setText(left);
             spectrumEnergyTexts[i].setText(right);
         }
@@ -2283,9 +2253,9 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         if (spectrumFreqTexts != null) return;
         historyCard.removeAllViews();
         addSpectrumHeader();
-        spectrumFreqTexts = new TextView[HISTORY_SIZE];
-        spectrumEnergyTexts = new TextView[HISTORY_SIZE];
-        for (int i = 0; i < HISTORY_SIZE; i++) {
+        spectrumFreqTexts = new TextView[SpectrumAnalyzer.HISTORY_SIZE];
+        spectrumEnergyTexts = new TextView[SpectrumAnalyzer.HISTORY_SIZE];
+        for (int i = 0; i < SpectrumAnalyzer.HISTORY_SIZE; i++) {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
@@ -2298,7 +2268,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             row.addView(spectrumFreqTexts[i]);
             row.addView(spectrumEnergyTexts[i]);
             historyCard.addView(row);
-            if (i < HISTORY_SIZE - 1) {
+            if (i < SpectrumAnalyzer.HISTORY_SIZE - 1) {
                 historyCard.addView(createDivider());
             }
         }
@@ -2332,92 +2302,6 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         view.setLayoutParams(new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         return view;
-    }
-
-    private SpectrumPeak[] calculateSpectrumPeaks() {
-        
-        final int snapshotIndex;
-        final int snapshotSize;
-        final float[] snapshotSamples;
-        final long[] snapshotTimestamps;
-        synchronized (spectrumSamplesLock) {
-            snapshotSize = spectrumSize;
-            snapshotIndex = sampleIndex;
-            snapshotSamples = magnitudeSamples.clone();
-            snapshotTimestamps = timestampSamples.clone();
-        }
-
-        float[] ordered = new float[snapshotSize];
-        long oldestTimestamp = 0L;
-        long newestTimestamp = 0L;
-        float mean = 0f;
-
-        for (int i = 0; i < snapshotSize; i++) {
-            int sourceIndex = (snapshotIndex + i) % snapshotSize;
-            ordered[i] = snapshotSamples[sourceIndex];
-            mean += ordered[i];
-            if (i == 0) {
-                oldestTimestamp = snapshotTimestamps[sourceIndex];
-            } else if (i == snapshotSize - 1) {
-                newestTimestamp = snapshotTimestamps[sourceIndex];
-            }
-        }
-
-        mean /= snapshotSize;
-        float sampleRate = calculateSampleRate(oldestTimestamp, newestTimestamp, snapshotSize - 1);
-        if (sampleRate <= 0f) {
-            return null;
-        }
-
-        SpectrumPeak[] peaks = new SpectrumPeak[HISTORY_SIZE];
-        for (int i = 0; i < HISTORY_SIZE; i++) {
-            peaks[i] = new SpectrumPeak(0f, 0f);
-        }
-
-        double[] real = new double[snapshotSize];
-        for (int i = 0; i < snapshotSize; i++) {
-            double window = 0.5d - 0.5d * Math.cos((2d * Math.PI * i) / (snapshotSize - 1));
-            real[i] = (ordered[i] - mean) * window;
-        }
-
-        
-        Complex[] spectrum = FFT_TRANSFORMER.transform(real, TransformType.FORWARD);
-
-        int half = snapshotSize / 2;
-        float[] energies = new float[half];
-        for (int bin = 0; bin < half; bin++) {
-            double mag = spectrum[bin].abs();
-            energies[bin] = (float) (mag * mag / snapshotSize);
-        }
-        
-        for (int bin = 2; bin < half - 1; bin++) {
-            if (energies[bin] > energies[bin - 1] && energies[bin] > energies[bin + 1]) {
-                float frequency = bin * sampleRate / snapshotSize;
-                insertPeak(peaks, new SpectrumPeak(frequency, energies[bin]));
-            }
-        }
-
-        return peaks;
-    }
-
-    private float calculateSampleRate(long oldestTimestamp, long newestTimestamp, int intervals) {
-        long durationNs = newestTimestamp - oldestTimestamp;
-        if (durationNs <= 0L || intervals <= 0) {
-            return 0f;
-        }
-        return intervals * 1_000_000_000f / durationNs;
-    }
-
-    private void insertPeak(SpectrumPeak[] peaks, SpectrumPeak candidate) {
-        for (int i = 0; i < peaks.length; i++) {
-            if (candidate.energy > peaks[i].energy) {
-                for (int j = peaks.length - 1; j > i; j--) {
-                    peaks[j] = peaks[j - 1];
-                }
-                peaks[i] = candidate;
-                return;
-            }
-        }
     }
 
     private TextView createRowText(String text, int gravity) {
@@ -2559,17 +2443,4 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             calibrationDialog.dismiss();
         }
     }
-
-    
-
-    private static final class SpectrumPeak {
-        final float frequency;
-        final float energy;
-
-        SpectrumPeak(float frequency, float energy) {
-            this.frequency = frequency;
-            this.energy = energy;
-        }
-    }
-
 }

@@ -1,4 +1,4 @@
-package com.example.magneticfield;
+package io.github.weiranyi.magneticfield;
 
 import android.app.Activity;
 import android.app.Application;

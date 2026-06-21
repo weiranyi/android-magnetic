@@ -1,4 +1,4 @@
-package com.example.magneticfield;
+package io.github.weiranyi.magneticfield;
 
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
@@ -119,19 +119,19 @@ public class AnalysisUtils {
             if (timeCol < 0) timeCol = 0;
             if (magCol < 0) magCol = header.length - 1;
 
-            float firstTime = Float.NaN;
+            double firstTime = Double.NaN;
             while ((line = reader.readLine()) != null) {
                 String[] parts = splitCsv(line);
                 if (parts.length <= Math.max(timeCol, magCol)) {
                     continue;
                 }
                 try {
-                    float t = parseTime(parts[timeCol]);
+                    double t = parseTime(parts[timeCol]);
                     float m = Float.parseFloat(parts[magCol].trim());
-                    if (Float.isNaN(firstTime)) {
+                    if (Double.isNaN(firstTime)) {
                         firstTime = t;
                     }
-                    times.add(t - firstTime);
+                    times.add((float) (t - firstTime));
                     mags.add(m);
                 } catch (Exception ignored) {
                 }
@@ -180,34 +180,133 @@ public class AnalysisUtils {
 
     /**
      * 解析时间字符串为秒数。
-     * 支持 HH:MM:SS.mmm.mmm.mmm（CSV 中秒后的 .mmm 为毫秒/微秒/纳秒）或纯数字。
+     * 支持 yyyy-MM-dd HH:mm:ss.mmm.nnnnnn（日期+时间+毫秒+纳秒6位）
+     * 以及旧格式 HH:mm:ss.mmm.uuu.nnn，或纯数字。
      */
-    private static float parseTime(String s) {
+    private static double parseTime(String s) {
         s = s.trim().replace("'", "");
-        if (s.contains(":")) {
-            String[] parts = s.split(":");
-            if (parts.length >= 3) {
-                int h = Integer.parseInt(parts[0]);
-                int m = Integer.parseInt(parts[1]);
-                // parts[2] 形如 "56.123.456.789"，分别对应秒、毫秒、微秒、纳秒
-                String[] secParts = parts[2].split("\\.");
-                int sec = Integer.parseInt(secParts[0]);
-                double fraction = 0.0;
-                if (secParts.length > 1) fraction += Integer.parseInt(secParts[1]) / 1000.0;
-                if (secParts.length > 2) fraction += Integer.parseInt(secParts[2]) / 1_000_000.0;
-                if (secParts.length > 3) fraction += Integer.parseInt(secParts[3]) / 1_000_000_000.0;
-                return h * 3600f + m * 60f + sec + (float) fraction;
+        try {
+            // 新格式：yyyy-MM-dd HH:mm:ss.mmm.nnnnnn
+            // 先按空格分割日期和时间部分
+            String datePart = null;
+            String timePart = s;
+            if (s.contains(" ") && s.contains("-")) {
+                int firstSpace = s.indexOf(' ');
+                datePart = s.substring(0, firstSpace).trim();
+                timePart = s.substring(firstSpace + 1).trim();
             }
+
+            // 解析日期部分（可选）
+            long daySeconds = 0L;
+            if (datePart != null && datePart.contains("-")) {
+                String[] dateParts = datePart.split("-");
+                if (dateParts.length >= 3) {
+                    int y = Integer.parseInt(dateParts[0].trim());
+                    int mo = Integer.parseInt(dateParts[1].trim());
+                    int d = Integer.parseInt(dateParts[2].trim());
+                    // 将日期转为自某基准日起的天数 * 86400
+                    // 使用简化公式计算 yyyy-MM-dd 的儒略日
+                    long a = (14L - mo) / 12L;
+                    long y2 = y + 4800L - a;
+                    long m2 = mo + 12L * a - 3L;
+                    long jdn = d + (153L * m2 + 2L) / 5L + 365L * y2 + y2 / 4L - y2 / 100L + y2 / 400L - 32045L;
+                    daySeconds = jdn * 86400L;
+                }
+            }
+
+            // 解析时间部分 HH:mm:ss.mmm[.nnnnnn] 或 HH:mm:ss.mmm.uuu.nnn
+            if (timePart.contains(":")) {
+                String[] parts = timePart.split(":");
+                if (parts.length >= 3) {
+                    int h = Integer.parseInt(parts[0].trim());
+                    int m = Integer.parseInt(parts[1].trim());
+                    String secPart = parts[2].trim();
+                    if (secPart.isEmpty()) {
+                        return daySeconds + h * 3600.0 + m * 60.0;
+                    }
+                    String[] secParts = secPart.split("\\.");
+                    if (secParts.length == 0 || secParts[0].trim().isEmpty()) {
+                        return daySeconds + h * 3600.0 + m * 60.0;
+                    }
+                    int sec = Integer.parseInt(secParts[0].trim());
+                    double fraction = 0.0;
+                    if (secParts.length > 1 && !secParts[1].trim().isEmpty()) {
+                        fraction += Integer.parseInt(secParts[1].trim()) / 1000.0;
+                    }
+                    if (secParts.length > 2 && !secParts[2].trim().isEmpty()) {
+                        String fracStr = secParts[2].trim();
+                        if (fracStr.length() >= 6) {
+                            // 新格式：6位亚毫秒纳秒 (0-999999)，需除以 1e9
+                            fraction += Integer.parseInt(fracStr) / 1_000_000_000.0;
+                        } else {
+                            // 旧格式：3位微秒 (0-999)，需除以 1e6
+                            fraction += Integer.parseInt(fracStr) / 1_000_000.0;
+                        }
+                    }
+                    if (secParts.length > 3 && !secParts[3].trim().isEmpty()) {
+                        // 旧格式的纳秒部分
+                        fraction += Integer.parseInt(secParts[3].trim()) / 1_000_000_000.0;
+                    }
+                    return daySeconds + h * 3600.0 + m * 60.0 + sec + fraction;
+                }
+            }
+            return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            return 0.0;
         }
-        return Float.parseFloat(s);
     }
 
     private static AnalysisResult analyze(float[] times, float[] magnitudes) {
         int n = magnitudes.length;
 
-        // 采样间隔与采样率
+        // 按时间排序：确保 times 严格递增，避免绘图时线条"回头"
+        final float[] origTimes = times;
+        Integer[] indices = new Integer[n];
+        for (int i = 0; i < n; i++) indices[i] = i;
+        java.util.Arrays.sort(indices, (a, b) -> {
+            float diff = origTimes[a] - origTimes[b];
+            if (diff != 0) return diff > 0 ? 1 : -1;
+            return 0;
+        });
+        float[] sortedTimes = new float[n];
+        float[] sortedMags = new float[n];
+        for (int i = 0; i < n; i++) {
+            sortedTimes[i] = origTimes[indices[i]];
+            sortedMags[i] = magnitudes[indices[i]];
+        }
+        // 去重：相同时间戳只保留第一个
+        int write = 0;
+        for (int read = 0; read < n; read++) {
+            if (write == 0 || sortedTimes[read] > sortedTimes[write - 1]) {
+                sortedTimes[write] = sortedTimes[read];
+                sortedMags[write] = sortedMags[read];
+                write++;
+            }
+        }
+        if (write < n) {
+            times = java.util.Arrays.copyOf(sortedTimes, write);
+            magnitudes = java.util.Arrays.copyOf(sortedMags, write);
+            n = write;
+        } else {
+            times = sortedTimes;
+            magnitudes = sortedMags;
+        }
+        // 去重后数据点不足，无法分析
+        if (n < 2) {
+            throw new IllegalArgumentException("有效数据点不足（去重后）");
+        }
+
+        // 采样间隔与采样率：确保 fs 始终为正
         float dt = meanDiff(times);
-        if (dt <= 0) dt = (times[n - 1] - times[0]) / Math.max(1, n - 1);
+        if (dt <= 0) {
+            float totalSpan = times[n - 1] - times[0];
+            if (totalSpan > 0) {
+                dt = totalSpan / Math.max(1, n - 1);
+            } else {
+                // 时间信息不可用，退回到按样本序号计算（1样本=1秒为下限）
+                dt = 1.0f;
+            }
+        }
         float fs = 1.0f / dt;
 
         // 去均值
@@ -427,6 +526,9 @@ public class AnalysisUtils {
     }
 
     private static double max(double[] arr) {
+        if (arr == null || arr.length == 0) {
+            throw new IllegalArgumentException("max() requires non-empty array");
+        }
         double m = arr[0];
         for (double v : arr) if (v > m) m = v;
         return m;

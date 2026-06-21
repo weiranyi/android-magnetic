@@ -1,4 +1,4 @@
-package com.example.magneticfield;
+package io.github.weiranyi.magneticfield;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat;
 public class AxesChartView extends View {
     private static final long CHART_WINDOW_NS = 20_000_000_000L;
     private static final long CHART_TICK_NS = 5_000_000_000L;
+    private static final long CHART_GAP_THRESHOLD_NS = 2_000_000_000L;
     private static final float MIN_CHART_LIMIT = 40f;
     private static final float CHART_LIMIT_STEP = 20f;
 
@@ -96,7 +97,7 @@ public class AxesChartView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        float left = getPaddingLeft() + dp(60);
+        float left = getPaddingLeft() + dp(42);
         float top = getPaddingTop() + dp(10);
         float right = getWidth() - getPaddingRight() - dp(6);
         float bottom = getHeight() - getPaddingBottom() - dp(30);
@@ -169,10 +170,14 @@ public class AxesChartView extends View {
     private void drawSeries(Canvas canvas, float[] samples, float left, float top, float right, float bottom, Paint paint) {
         
         reusablePath.reset();
+        if (samples.length == 0) {
+            return;
+        }
         long newestNs = getTimestampAtVisibleIndex(sampleCount - 1);
         long viewportStartNs = getViewportStartNs(newestNs);
         long viewportEndNs = viewportStartNs + CHART_WINDOW_NS;
         boolean hasPoint = false;
+        long prevTimestampNs = 0L;
         for (int i = 0; i < sampleCount; i++) {
             int source = (sampleIndex - sampleCount + i + samples.length) % samples.length;
             long timestampNs = timestampsNs[source];
@@ -185,8 +190,14 @@ public class AxesChartView extends View {
                 reusablePath.moveTo(x, y);
                 hasPoint = true;
             } else {
-                reusablePath.lineTo(x, y);
+                // 相邻点时间间隔超过阈值时断开路径，避免后台返回时出现跳变连线
+                if (timestampNs - prevTimestampNs > CHART_GAP_THRESHOLD_NS) {
+                    reusablePath.moveTo(x, y);
+                } else {
+                    reusablePath.lineTo(x, y);
+                }
             }
+            prevTimestampNs = timestampNs;
         }
         if (hasPoint) {
             canvas.drawPath(reusablePath, paint);

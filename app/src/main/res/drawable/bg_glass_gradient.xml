@@ -2,7 +2,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#F7F8FA" />
+            <solid android:color="@color/bg" />
         </shape>
     </item>
     <item>
@@ -10,9 +10,9 @@
             <gradient
                 android:type="linear"
                 android:angle="315"
-                android:startColor="#1A3B82F6"
-                android:centerColor="#00FFFFFF"
-                android:endColor="#00FFFFFF" />
+                android:startColor="@color/bg_tint_primary"
+                android:centerColor="@color/bg_tint_transparent"
+                android:endColor="@color/bg_tint_transparent" />
         </shape>
     </item>
     <item>
@@ -20,9 +20,9 @@
             <gradient
                 android:type="linear"
                 android:angle="135"
-                android:startColor="#1610B981"
-                android:centerColor="#00FFFFFF"
-                android:endColor="#00FFFFFF" />
+                android:startColor="@color/bg_tint_success"
+                android:centerColor="@color/bg_tint_transparent"
+                android:endColor="@color/bg_tint_transparent" />
         </shape>
     </item>
     <item>
@@ -30,9 +30,9 @@
             <gradient
                 android:type="linear"
                 android:angle="45"
-                android:startColor="#148B5CF6"
-                android:centerColor="#00FFFFFF"
-                android:endColor="#00FFFFFF" />
+                android:startColor="@color/bg_tint_secondary"
+                android:centerColor="@color/bg_tint_transparent"
+                android:endColor="@color/bg_tint_transparent" />
         </shape>
     </item>
 </layer-list>

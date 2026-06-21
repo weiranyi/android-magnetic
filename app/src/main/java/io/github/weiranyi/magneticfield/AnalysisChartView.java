@@ -1,4 +1,4 @@
-package com.example.magneticfield;
+package io.github.weiranyi.magneticfield;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -296,8 +296,23 @@ public class AnalysisChartView extends View {
     private void drawSeries(Canvas canvas, float left, float top, float right, float bottom) {
         linePath.reset();
         boolean first = true;
-        boolean prevClippedBottom = false;
-        for (int i = 0; i < pointCount; i++) {
+        boolean prevClipped = false;
+        // 按 xValues 排序绘制：确保线条从左到右，不会"回头"
+        Integer[] order = new Integer[pointCount];
+        for (int i = 0; i < pointCount; i++) order[i] = i;
+        boolean needSort = false;
+        for (int i = 1; i < pointCount; i++) {
+            if (xValues[i] < xValues[i - 1]) { needSort = true; break; }
+        }
+        if (needSort) {
+            java.util.Arrays.sort(order, (a, b) -> {
+                float d = xValues[a] - xValues[b];
+                if (d != 0) return d > 0 ? 1 : -1;
+                return 0;
+            });
+        }
+        for (int k = 0; k < pointCount; k++) {
+            int i = needSort ? order[k] : k;
             float x = mapX(xValues[i], left, right);
             float y = mapY(yValues[i], top, bottom);
             boolean clippedTop    = (y < top);
@@ -307,13 +322,13 @@ public class AnalysisChartView extends View {
             if (first) {
                 linePath.moveTo(x, y);
                 first = false;
-            } else if (prevClippedBottom && !clippedBottom) {
-                // 上一个点被压在下边界，当前点恢复正常 → 断开路径
+            } else if (prevClipped) {
+                // 上一个点被裁剪（顶部或底部），当前点无论是否正常都断开路径，避免在边界处画多余线段
                 linePath.moveTo(x, y);
             } else {
                 linePath.lineTo(x, y);
             }
-            prevClippedBottom = clippedBottom && !clippedTop;
+            prevClipped = clippedTop || clippedBottom;
         }
         canvas.drawPath(linePath, linePaint);
 

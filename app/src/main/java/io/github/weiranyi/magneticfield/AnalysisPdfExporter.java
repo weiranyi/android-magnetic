@@ -1,4 +1,4 @@
-package com.example.magneticfield;
+package io.github.weiranyi.magneticfield;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -73,7 +73,11 @@ public class AnalysisPdfExporter {
             throws Exception {
 
         // BUG5修复：导出前清空旧的 PDF 缓存文件
-        File outDir = new File(context.getCacheDir(), "pdf_export");
+        File cacheDir = context.getCacheDir();
+        if (cacheDir == null) {
+            cacheDir = context.getFilesDir();
+        }
+        File outDir = new File(cacheDir, "pdf_export");
         //noinspection ResultOfMethodCallIgnored
         outDir.mkdirs();
         File[] oldFiles = outDir.listFiles((d, name) -> name.endsWith(".pdf"));
@@ -365,7 +369,7 @@ public class AnalysisPdfExporter {
         // 折线
         Path linePath = new Path();
         boolean first = true;
-        boolean prevClippedBottom = false;
+        boolean prevClipped = false;
         for (int i = 0; i < count; i++) {
             float px = left + (xData[i] - xMin) / xRange * (right - left);
             float py = bottom - (yData[i] - yMin) / yRange * (bottom - top);
@@ -376,12 +380,13 @@ public class AnalysisPdfExporter {
             if (first) {
                 linePath.moveTo(px, py);
                 first = false;
-            } else if (prevClippedBottom && !clippedBottom) {
+            } else if (prevClipped) {
+                // 上一个点被裁剪（顶部或底部），当前点无论是否正常都断开路径，避免在边界处画多余线段
                 linePath.moveTo(px, py);
             } else {
                 linePath.lineTo(px, py);
             }
-            prevClippedBottom = clippedBottom && !clippedTop;
+            prevClipped = clippedTop || clippedBottom;
         }
 
         if (fill) {
