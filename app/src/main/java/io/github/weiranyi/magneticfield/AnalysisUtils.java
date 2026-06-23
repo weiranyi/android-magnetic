@@ -117,7 +117,7 @@ public class AnalysisUtils {
             int timeCol = findColumn(header, "时间", "time", "timestamp");
             int magCol = findColumn(header, "总量", "total", "magnitude");
             if (timeCol < 0) timeCol = 0;
-            if (magCol < 0) magCol = header.length - 1;
+            if (magCol < 0) magCol = Math.max(0, header.length - 1);
 
             double firstTime = Double.NaN;
             while ((line = reader.readLine()) != null) {
@@ -366,12 +366,12 @@ public class AnalysisUtils {
             freqHi = Math.min(fs / 2, 50f);
         }
 
-        // 80% 能量集中
+        // 50% 能量集中（25%-75% 四分位距），避免 DC 峰主导导致范围过宽
         double totalE = sum(welch.psd);
-        double cum10 = totalE * 0.10;
-        double cum90 = totalE * 0.90;
-        int loIdx = searchSortedCumulative(welch.psd, cum10);
-        int hiIdx = searchSortedCumulative(welch.psd, cum90);
+        double cum25 = totalE * 0.25;
+        double cum75 = totalE * 0.75;
+        int loIdx = searchSortedCumulative(welch.psd, cum25);
+        int hiIdx = searchSortedCumulative(welch.psd, cum75);
         float eLo = round(welch.frequencies[Math.max(0, loIdx)], 2);
         float eHi = round(welch.frequencies[Math.min(welch.psd.length - 1, hiIdx)], 2);
 
@@ -489,6 +489,11 @@ public class AnalysisUtils {
     }
 
     private static List<Peak> findPeaks(double[] amplitudes, double df, int start, double threshold) {
+        // 参数防御：确保起始索引至少为 1（需要访问 [start-1]）
+        if (start < 1) start = 1;
+        if (amplitudes == null || amplitudes.length < 3) {
+            return new java.util.ArrayList<>();
+        }
         List<Peak> peaks = new ArrayList<>();
         int minDistance = Math.max(3, (int) (0.1 / df));
         int i = start;

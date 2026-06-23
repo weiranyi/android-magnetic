@@ -45,7 +45,6 @@ public class AnalysisPdfExporter {
 
     private static Typeface getCjkTypeface() {
         if (sCjkTypeface != null) return sCjkTypeface;
-        String winFonts = android.os.Environment.getRootDirectory() + "/system/fonts";
         String[] candidates = {
                 "/system/fonts/NotoSansCJK-Regular.ttc",
                 "/system/fonts/DroidSansFallback.ttf",
@@ -436,19 +435,13 @@ public class AnalysisPdfExporter {
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(color);
         p.setTextSize(sp);
+        p.setTypeface(getCjkTypeface());  // 使用 CJK 字体，防止 PDF 中文方块
         return p;
     }
 
     private static Paint boldPaint(int sp, int color) {
         Paint p = normalPaint(sp, color);
-        p.setTypeface(Typeface.DEFAULT_BOLD);
-        return p;
-    }
-
-    /** 使用系统中文字体的 Paint，防止中文方块乱码 */
-    private static Paint cjkPaint(int sp, int color) {
-        Paint p = normalPaint(sp, color);
-        p.setTypeface(getCjkTypeface());
+        p.setFakeBoldText(true);  // CJK 字体无原生粗体，用 fake bold 代替
         return p;
     }
 

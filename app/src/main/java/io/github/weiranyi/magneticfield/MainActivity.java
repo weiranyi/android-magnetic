@@ -120,7 +120,9 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     private TextView btnReset;
     private LinearLayout fileListContainer;
     private Dialog calibrationDialog;
-    
+    private Dialog analysisDialog;   // 分析弹窗，用于 onDestroy 时 dismiss 防止 WindowLeak
+    private android.app.AlertDialog analyzeProgressDialog; // 分析进度弹窗，用于 onDestroy 时 dismiss 防止 WindowLeak
+
     private android.app.AlertDialog confirmDialog;
     private VideoView calibrationVideoView;
     private ImageView playPauseOverlay;
@@ -464,6 +466,14 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         if (confirmDialog != null && confirmDialog.isShowing()) {
             confirmDialog.dismiss();
             confirmDialog = null;
+        }
+        if (analysisDialog != null && analysisDialog.isShowing()) {
+            analysisDialog.dismiss();
+            analysisDialog = null;
+        }
+        if (analyzeProgressDialog != null && analyzeProgressDialog.isShowing()) {
+            analyzeProgressDialog.dismiss();
+            analyzeProgressDialog = null;
         }
         if (saveExecutor != null) {
             
@@ -1143,6 +1153,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     }
 
     private void populateFileList(File[] files) {
+        // 先清空旧条目，避免重复添加
         fileListContainer.removeAllViews();
 
         if (files == null || files.length == 0) {
@@ -1272,20 +1283,26 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
 
     private void analyzeFile(File file) {
         if (isFinishing() || isDestroyed()) return;
-        android.app.AlertDialog progressDialog = new android.app.AlertDialog.Builder(this, R.style.GlassAlertDialog)
+        if (analyzeProgressDialog != null && analyzeProgressDialog.isShowing()) {
+            analyzeProgressDialog.dismiss();
+        }
+        analyzeProgressDialog = new android.app.AlertDialog.Builder(this, R.style.GlassAlertDialog)
                 .setTitle(R.string.analyze_title)
                 .setMessage(R.string.analyze_loading)
                 .setCancelable(false)
                 .create();
-        progressDialog.show();
-        applyGlassDialogBackground(progressDialog);
+        analyzeProgressDialog.setOnDismissListener(dialog -> analyzeProgressDialog = null);
+        analyzeProgressDialog.show();
+        applyGlassDialogBackground(analyzeProgressDialog);
 
         Runnable analyzeTask = () -> {
             try {
                 AnalysisUtils.AnalysisResult result = AnalysisUtils.analyzeFile(file);
                 mainHandler.post(() -> {
                     if (!isFinishing() && !isDestroyed()) {
-                        progressDialog.dismiss();
+                        if (analyzeProgressDialog != null && analyzeProgressDialog.isShowing()) {
+                            analyzeProgressDialog.dismiss();
+                        }
                         showAnalysisDialog(result, file);
                     }
                 });
@@ -1294,7 +1311,9 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
                 final String errMsg = e.getMessage() != null ? e.getMessage() : getString(R.string.analyze_error);
                 mainHandler.post(() -> {
                     if (!isFinishing() && !isDestroyed()) {
-                        progressDialog.dismiss();
+                        if (analyzeProgressDialog != null && analyzeProgressDialog.isShowing()) {
+                            analyzeProgressDialog.dismiss();
+                        }
                         Toast.makeText(this, getString(R.string.analyze_error) + ": " + errMsg, Toast.LENGTH_LONG).show();
                     }
                 });
@@ -1710,6 +1729,7 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         Dialog dialog = new Dialog(this, android.R.style.Theme_Material_Light_NoActionBar);
         dialog.setContentView(root);
         dialogHolder[0] = dialog;
+        analysisDialog = dialog;   // 保存引用，便于 onDestroy() 时 dismiss
 
         // 在 dialog 创建后绑定导出按钮事件（dialog 此时已 effectively final）
         exportBtn.setOnClickListener(v -> exportPdfAndShare(result, file, dialog));

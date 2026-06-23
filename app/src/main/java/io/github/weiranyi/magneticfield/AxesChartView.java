@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat;
 public class AxesChartView extends View {
     private static final long CHART_WINDOW_NS = 20_000_000_000L;
     private static final long CHART_TICK_NS = 5_000_000_000L;
-    private static final long CHART_GAP_THRESHOLD_NS = 2_000_000_000L;
+    private static final long CHART_GAP_THRESHOLD_NS = 10_000_000_000L;  // 10秒，避免短暂切后台就断线
     private static final float MIN_CHART_LIMIT = 40f;
     private static final float CHART_LIMIT_STEP = 20f;
 

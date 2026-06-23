@@ -50,6 +50,8 @@ public class MagneticSensorService extends Service implements SensorEventListene
             BACKGROUND_AUTO_STOP_DELAY_MS + BACKGROUND_AUTO_STOP_FALLBACK_GRACE_MS + 1_000L;
     private static final long RECORDING_WAKE_LOCK_TIMEOUT_MS = 12 * 60 * 60 * 1000L;
     private static final long CHART_SAMPLE_INTERVAL_MS = 250L;
+    private static final long CHART_GAP_CLEAR_THRESHOLD_NS = 5_000_000_000L;  // 5秒无采样视为中断，清空旧缓冲区
+    private static final long CHART_WINDOW_NS = 20_000_000_000L;  // 图表显示窗口大小（20秒）
     private static final long NOTIFICATION_UPDATE_INTERVAL_MS = 1_000L;
     private static final int DEFAULT_SAMPLE_RATE_HZ = 0;
     private static final int CHART_HISTORY_SIZE = 14400;
@@ -340,6 +342,10 @@ public class MagneticSensorService extends Service implements SensorEventListene
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // 取消注册后传感器线程的回调可能延迟到达，忽略避免更新已停止的状态
+        if (!sensorRegistered) {
+            return;
+        }
         if (event == null || event.values == null || event.values.length < 3) {
             return;
         }
@@ -732,6 +738,11 @@ public class MagneticSensorService extends Service implements SensorEventListene
                 && timestampNs - lastChartSampleTimestampNs < CHART_SAMPLE_INTERVAL_MS * 1_000_000L) {
             return;
         }
+        // 长时间采样中断（如后台返回/息屏恢复），清空旧缓冲区，避免时间戳跳变导致折线断开
+        if (lastChartSampleTimestampNs > 0L
+                && timestampNs - lastChartSampleTimestampNs > CHART_GAP_CLEAR_THRESHOLD_NS) {
+            clearChartSamples();
+        }
         addChartSampleInternal(x, y, z, magnitude, timestampNs, true);
     }
 
@@ -819,23 +830,66 @@ public class MagneticSensorService extends Service implements SensorEventListene
                 file.delete();
                 return;
             }
-            clearChartSamples();
+
+            java.util.ArrayList<ChartCacheEntry> entries = new java.util.ArrayList<>();
             for (int i = 0; i < count; i++) {
                 float x = in.readFloat();
                 float y = in.readFloat();
                 float z = in.readFloat();
                 float total = in.readFloat();
                 long timestampNs = in.readLong();
-                addChartSampleInternal(x, y, z, total, timestampNs, false);
+                entries.add(new ChartCacheEntry(x, y, z, total, timestampNs));
             }
+            long originTimestampNs = in.readLong();
+            in.readLong();
+
+            if (entries.isEmpty()) {
+                file.delete();
+                return;
+            }
+
+            long newestTimestampNs = entries.get(entries.size() - 1).timestampNs;
+            long nowNs = SystemClock.elapsedRealtimeNanos();
+
+            if (nowNs - newestTimestampNs > CHART_GAP_CLEAR_THRESHOLD_NS) {
+                file.delete();
+                return;
+            }
+
+            long windowStartNs = newestTimestampNs - CHART_WINDOW_NS;
+
+            clearChartSamples();
+            long actualOriginNs = 0L;
+            for (ChartCacheEntry entry : entries) {
+                if (entry.timestampNs >= windowStartNs) {
+                    if (actualOriginNs == 0L) {
+                        actualOriginNs = entry.timestampNs;
+                    }
+                    addChartSampleInternal(entry.x, entry.y, entry.z, entry.total, entry.timestampNs, false);
+                }
+            }
+
             synchronized (CHART_LOCK) {
-                chartOriginTimestampNs = in.readLong();
-                lastChartSampleTimestampNs = in.readLong();
+                chartOriginTimestampNs = actualOriginNs;
             }
+
             file.delete();
         } catch (Exception e) {
             android.util.Log.w("MagneticSensorService", "Failed to load chart cache", e);
             file.delete();
+        }
+    }
+
+    private static final class ChartCacheEntry {
+        final float x, y, z, total;
+        final long timestampNs;
+
+        ChartCacheEntry(float x, float y, float z, float total, long timestampNs) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.total = total;
+            this.timestampNs = timestampNs;
         }
     }
 

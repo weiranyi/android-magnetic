@@ -56,15 +56,24 @@ public class SpectrumAnalyzer {
             peaks[i] = new SpectrumPeak(0f, 0f);
         }
 
-        double[] real = new double[snapshotSize];
+        // FFT 输入长度必须是 2 的幂（Apache Commons Math 要求），不足时用 0 补齐
+        int fftSize = 1;
+        while (fftSize < snapshotSize) {
+            fftSize <<= 1;
+        }
+        double[] real = new double[fftSize];
         for (int i = 0; i < snapshotSize; i++) {
             double window = 0.5d - 0.5d * Math.cos((2d * Math.PI * i) / (snapshotSize - 1));
             real[i] = (ordered[i] - mean) * window;
         }
+        // 剩余的 [snapshotSize, fftSize) 保持 0，不需要显式赋值
 
         Complex[] spectrum = FFT_TRANSFORMER.transform(real, TransformType.FORWARD);
 
-        int half = snapshotSize / 2;
+        int half = fftSize / 2;
+        // 根据原始采样率换算频谱频率分辨率：sampleRate / fftSize
+        // 通过把频谱能量按比例缩放，保持峰值搜索频率与原始 snapshotSize 一致
+        final double sampleRateForBin = (double) sampleRate / (double) fftSize;
         float[] energies = new float[half];
         for (int bin = 0; bin < half; bin++) {
             double mag = spectrum[bin].abs();
@@ -73,7 +82,7 @@ public class SpectrumAnalyzer {
 
         for (int bin = 2; bin < half - 1; bin++) {
             if (energies[bin] > energies[bin - 1] && energies[bin] > energies[bin + 1]) {
-                float frequency = bin * sampleRate / snapshotSize;
+                float frequency = (float) (bin * sampleRateForBin);
                 insertPeak(peaks, new SpectrumPeak(frequency, energies[bin]));
             }
         }
