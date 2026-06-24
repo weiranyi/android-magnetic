@@ -4,4 +4,3 @@
 
 
 -keep class io.github.weiranyi.magneticfield.SpectrumAnalyzer$SpectrumPeak { *; }
--keep class io.github.weiranyi.magneticfield.MainActivity$RecordEntry { *; }

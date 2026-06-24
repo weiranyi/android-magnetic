@@ -297,6 +297,8 @@ public class AnalysisChartView extends View {
         linePath.reset();
         boolean first = true;
         boolean prevClipped = false;
+        int firstDrawnIdx = -1;
+        int lastDrawnIdx = -1;
         // 按 xValues 排序绘制：确保线条从左到右，不会"回头"
         Integer[] order = new Integer[pointCount];
         for (int i = 0; i < pointCount; i++) order[i] = i;
@@ -322,6 +324,7 @@ public class AnalysisChartView extends View {
             if (first) {
                 linePath.moveTo(x, y);
                 first = false;
+                firstDrawnIdx = i;
             } else if (prevClipped) {
                 // 上一个点被裁剪（顶部或底部），当前点无论是否正常都断开路径，避免在边界处画多余线段
                 linePath.moveTo(x, y);
@@ -329,14 +332,15 @@ public class AnalysisChartView extends View {
                 linePath.lineTo(x, y);
             }
             prevClipped = clippedTop || clippedBottom;
+            lastDrawnIdx = i;
         }
         canvas.drawPath(linePath, linePaint);
 
-        if (fillArea) {
+        if (fillArea && firstDrawnIdx >= 0 && lastDrawnIdx >= 0) {
             fillPath.reset();
             fillPath.addPath(linePath);
-            float lastX  = mapX(xValues[pointCount - 1], left, right);
-            float firstX = mapX(xValues[0], left, right);
+            float lastX  = mapX(xValues[lastDrawnIdx], left, right);
+            float firstX = mapX(xValues[firstDrawnIdx], left, right);
             fillPath.lineTo(lastX, bottom);
             fillPath.lineTo(firstX, bottom);
             fillPath.close();

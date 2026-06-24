@@ -29,6 +29,10 @@ public class SpectrumAnalyzer {
             float[] magnitudeSamples, long[] timestampSamples,
             int snapshotIndex, int snapshotSize) {
 
+        if (snapshotSize < 2) {
+            return null;
+        }
+
         float[] ordered = new float[snapshotSize];
         long oldestTimestamp = 0L;
         long newestTimestamp = 0L;
@@ -62,8 +66,10 @@ public class SpectrumAnalyzer {
             fftSize <<= 1;
         }
         double[] real = new double[fftSize];
+        double windowDenom = snapshotSize - 1;
+        if (windowDenom < 1d) windowDenom = 1d;
         for (int i = 0; i < snapshotSize; i++) {
-            double window = 0.5d - 0.5d * Math.cos((2d * Math.PI * i) / (snapshotSize - 1));
+            double window = 0.5d - 0.5d * Math.cos((2d * Math.PI * i) / windowDenom);
             real[i] = (ordered[i] - mean) * window;
         }
         // 剩余的 [snapshotSize, fftSize) 保持 0，不需要显式赋值

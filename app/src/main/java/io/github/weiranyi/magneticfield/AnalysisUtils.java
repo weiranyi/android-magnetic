@@ -489,11 +489,11 @@ public class AnalysisUtils {
     }
 
     private static List<Peak> findPeaks(double[] amplitudes, double df, int start, double threshold) {
-        // 参数防御：确保起始索引至少为 1（需要访问 [start-1]）
-        if (start < 1) start = 1;
         if (amplitudes == null || amplitudes.length < 3) {
             return new java.util.ArrayList<>();
         }
+        if (start < 1) start = 1;
+        if (start >= amplitudes.length - 1) start = amplitudes.length - 2;
         List<Peak> peaks = new ArrayList<>();
         int minDistance = Math.max(3, (int) (0.1 / df));
         int i = start;
