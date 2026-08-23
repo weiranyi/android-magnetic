@@ -354,13 +354,6 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     }
 
     private void syncRecordingStateFromService() {
-        if (MagneticSensorService.consumeRecordingLimitReached()) {
-            isRecording = false;
-            recordingStopPending = true;
-            Toast.makeText(getApplicationContext(), R.string.recording_limit_reached, Toast.LENGTH_LONG).show();
-            stopRecordingAndSave();
-            return;
-        }
         isRecording = MagneticSensorService.isRecording();
         isRecordingSaving = MagneticSensorService.isRecordingSaving();
         recordingStopPending = false;
@@ -505,16 +498,6 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         }
         addSpectrumSample(magnitude, timestampNs);
         addAxesSample(x, y, z, magnitude, timestampNs);
-        if (MagneticSensorService.consumeRecordingLimitReached()) {
-            isRecording = false;
-            recordingStopPending = true;
-            mainHandler.post(() -> {
-                Toast.makeText(getApplicationContext(), R.string.recording_limit_reached, Toast.LENGTH_LONG).show();
-                stopRecordingAndSave();
-            });
-            return;
-        }
-
         long now = SystemClock.elapsedRealtime();
         if (now - lastUiUpdateMs < UI_UPDATE_INTERVAL_MS) {
             return;

@@ -84,7 +84,6 @@ public class MagneticSensorService extends Service implements SensorEventListene
     private static volatile boolean hasLastSample;
     private static volatile boolean recording;
     private static volatile boolean recordingSaving;
-    private static volatile boolean recordingLimitReached;
     private static volatile long recordingStartedWallTimeMs;
     private static volatile long recordingStartedElapsedNs;
     private static volatile int targetSampleRateHz = DEFAULT_SAMPLE_RATE_HZ;
@@ -357,8 +356,10 @@ public class MagneticSensorService extends Service implements SensorEventListene
             return;
         }
         SensorRateController.updateActualSampleRate(event.timestamp);
-        // 使用 SystemClock.elapsedRealtimeNanos() 保证与录制参考时间同一时钟基准
-        long nowNs = SystemClock.elapsedRealtimeNanos();
+        // SensorEvent.timestamp 与 elapsedRealtimeNanos() 使用同一开机时钟基准，
+        // 但前者是硬件实际采样时刻。保留它可避免批量上报时把多个样本
+        // 误记为几乎同一时刻，导致录制文件和频谱分析的时间轴失真。
+        long nowNs = event.timestamp;
         lastX = x;
         lastY = y;
         lastZ = z;
@@ -901,7 +902,6 @@ public class MagneticSensorService extends Service implements SensorEventListene
             recordingData.clear();
             recording = true;
             recordingSaving = false;
-            recordingLimitReached = false;
             // 同一时刻同时捕获墙钟与开机时钟，保证后续时间转换的单调性
             long nowMs = System.currentTimeMillis();
             long nowElapsedNs = SystemClock.elapsedRealtimeNanos();
@@ -921,7 +921,6 @@ public class MagneticSensorService extends Service implements SensorEventListene
         java.util.ArrayList<RecordingSample> snapshot;
         synchronized (RECORDING_LOCK) {
             recording = false;
-            recordingLimitReached = false;
             snapshot = new java.util.ArrayList<>(recordingData);
             recordingData.clear();
             recordingSaving = !snapshot.isEmpty();
@@ -1008,14 +1007,6 @@ public class MagneticSensorService extends Service implements SensorEventListene
         }
     }
 
-    public static boolean consumeRecordingLimitReached() {
-        synchronized (RECORDING_LOCK) {
-            boolean reached = recordingLimitReached;
-            recordingLimitReached = false;
-            return reached;
-        }
-    }
-
     private static void notifyRecordingStateChanged(boolean fileListChanged) {
         final boolean currentRecording;
         final boolean currentSaving;
@@ -1037,7 +1028,6 @@ public class MagneticSensorService extends Service implements SensorEventListene
             if (recordingData.size() >= MAX_RECORDING_ENTRIES) {
                 recording = false;
                 recordingSaving = true;
-                recordingLimitReached = true;
                 if (mainHandler != null) {
                     mainHandler.post(() -> saveRecordingAndThen(null));
                 }

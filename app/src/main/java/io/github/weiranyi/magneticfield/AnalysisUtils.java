@@ -291,9 +291,10 @@ public class AnalysisUtils {
             times = sortedTimes;
             magnitudes = sortedMags;
         }
-        // 去重后数据点不足，无法分析
-        if (n < 2) {
-            throw new IllegalArgumentException("有效数据点不足（去重后）");
+        // Welch 分析至少需要 4 个时间唯一的样本；更少会令分段长度降为 1，
+        // 进而在窗函数计算中产生除零和 NaN。
+        if (n < 4) {
+            throw new IllegalArgumentException("有效数据点不足（去重后至少需要 4 个）");
         }
 
         // 采样间隔与采样率：确保 fs 始终为正
