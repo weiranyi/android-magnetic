@@ -145,6 +145,12 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
     private final long[] chartTimestampsNs = new long[AXES_CHART_HISTORY_SIZE];
     private final Object spectrumSamplesLock = new Object();
     private final Object axesSamplesLock = new Object();
+    // Lifetime statistics for the current measurement session. The fixed-size
+    // axes arrays above are only a rolling buffer for chart/UI synchronization.
+    private float axesSessionMax = -Float.MAX_VALUE;
+    private float axesSessionMin = Float.MAX_VALUE;
+    private double axesSessionSum;
+    private long axesSessionCount;
     private volatile int sampleIndex;
     private volatile int sampleCount;
     private volatile int spectrumSize = DEFAULT_SPECTRUM_SIZE;
@@ -2043,6 +2049,10 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             if (axesSampleCount < AXES_HISTORY_SIZE) {
                 axesSampleCount++;
             }
+            axesSessionMax = Math.max(axesSessionMax, magnitude);
+            axesSessionMin = Math.min(axesSessionMin, magnitude);
+            axesSessionSum += magnitude;
+            axesSessionCount++;
         }
     }
 
@@ -2096,30 +2106,25 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
         axesTotalText.setText(String.format(Locale.US, getString(R.string.axis_value_format), magnitude));
 
         
-        final int snapshotAxesCount;
-        final float[] snapshotTotal = new float[AXES_HISTORY_SIZE];
+        final long snapshotStatsCount;
+        final float snapshotMax;
+        final float snapshotMin;
+        final double snapshotSum;
         synchronized (axesSamplesLock) {
-            snapshotAxesCount = axesSampleCount;
-            System.arraycopy(totalSamples, 0, snapshotTotal, 0, AXES_HISTORY_SIZE);
+            snapshotStatsCount = axesSessionCount;
+            snapshotMax = axesSessionMax;
+            snapshotMin = axesSessionMin;
+            snapshotSum = axesSessionSum;
         }
-        if (snapshotAxesCount == 0) {
+        if (snapshotStatsCount == 0) {
             axesMaxText.setText(R.string.max_placeholder);
             axesMinText.setText(R.string.min_placeholder);
             axesAvgText.setText(R.string.avg_placeholder);
         } else {
-            float max = -Float.MAX_VALUE;
-            float min = Float.MAX_VALUE;
-            double sum = 0d;
-            for (int i = 0; i < snapshotAxesCount; i++) {
-                float v = snapshotTotal[i];
-                if (v > max) max = v;
-                if (v < min) min = v;
-                sum += v;
-            }
-            axesMaxText.setText(String.format(Locale.US, getString(R.string.max_format), max));
-            axesMinText.setText(String.format(Locale.US, getString(R.string.min_format), min));
+            axesMaxText.setText(String.format(Locale.US, getString(R.string.max_format), snapshotMax));
+            axesMinText.setText(String.format(Locale.US, getString(R.string.min_format), snapshotMin));
             axesAvgText.setText(String.format(Locale.US, getString(R.string.avg_format),
-                    (float) (sum / snapshotAxesCount)));
+                    (float) (snapshotSum / snapshotStatsCount)));
         }
 
         axesChartView.setSamples(chartXSamples, chartYSamples, chartZSamples, chartTotalSamples,
@@ -2136,6 +2141,10 @@ public class MainActivity extends Activity implements MagneticSensorService.Samp
             Arrays.fill(axesTimestampsNs, 0L);
             axesSampleIndex = 0;
             axesSampleCount = 0;
+            axesSessionMax = -Float.MAX_VALUE;
+            axesSessionMin = Float.MAX_VALUE;
+            axesSessionSum = 0d;
+            axesSessionCount = 0L;
         }
         seedAxes();
         resetAxesChart();
