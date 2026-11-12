@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash activity theme attributes -->
+    <attr name="textPrimaryColor" format="color" />
+    <attr name="textSecondaryColor" format="color" />
+    <attr name="textTertiaryColor" format="color" />
+</resources>

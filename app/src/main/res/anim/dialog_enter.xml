@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 对话框从底部滑入 + 淡入 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300"
+    android:interpolator="@android:interpolator/decelerate_cubic">
+
+    <!-- 透明度：0 → 1 -->
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0" />
+
+    <!-- 位移：从屏幕底部 100% 高度滑到原位置 -->
+    <translate
+        android:fromYDelta="100%p"
+        android:toYDelta="0"
+        android:fillAfter="true" />
+
+</set>

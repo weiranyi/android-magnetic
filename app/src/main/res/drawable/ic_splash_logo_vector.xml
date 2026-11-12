@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp"
+    android:height="180dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- 白色完整圆底 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,100m-80,0a80,80 0,1 0,160 0a80,80 0,1 0,-160 0" />
+
+    <!-- 深色阴：左侧半圆 + S形分界线 -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M100,20a80,80 0 0,0 0,160a40,40 0 0,1 0,-80a40,40 0 0,0 0,-80z" />
+
+    <!-- 阴中之阳点：白色小圆，圆心(100,60)，半径16 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,44a16,16 0 1,0 0,32a16,16 0 1,0 0,-32z" />
+
+    <!-- 阳中之阴点：深色小圆，圆心(100,140)，半径16 -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M100,124a16,16 0 1,0 0,32a16,16 0 1,0 0,-32z" />
+
+    <!-- 外圈描边 -->
+    <path
+        android:strokeColor="#1E293B"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:pathData="M100,100m-80,0a80,80 0,1 0,160 0a80,80 0,1 0,-160 0" />
+
+    <!-- N 字母：深色描边，在上方白圆点内（圆心100,60） -->
+    <path
+        android:strokeColor="#1E293B"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M94,52 L94,68 L106,52 L106,68" />
+
+    <!-- S 字母：白色描边，在下方黑圆点内（圆心100,140） -->
+    <!-- 标准S形：左上起笔 -> 左弯到中部 -> 右弯到底部 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M104,133 Q92,133 100,140 Q108,147 96,147" />
+
+</vector>
